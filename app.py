@@ -5,18 +5,17 @@ import json
 from openai import OpenAI
 
 # --- PAGE CONFIGURATION ---
-st.set_page_config(page_title="EduPlan Video Tool", page_icon="🎬", layout="wide")
+st.set_page_config(page_title="EduPlan Pro", page_icon="🎓", layout="wide")
 
-# --- CSS STYLING (Minimal & Clean) ---
+# --- CSS STYLING ---
 st.markdown("""
     <style>
     .main-header {text-align: center; color: #333;}
-    .video-label {font-weight: bold; color: #444; margin-bottom: 5px;}
+    .topic-header {color: #2e86c1; border-bottom: 2px solid #2e86c1; padding-bottom: 10px; margin-top: 30px;}
+    .sub-header {font-weight: bold; color: #555; margin-top: 15px;}
+    .video-card {background-color: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 10px;}
     div[data-testid="stToolbar"] {visibility: hidden;}
     footer {visibility: hidden;}
-    .stTabs [data-baseweb="tab-list"] { gap: 20px; }
-    .stTabs [data-baseweb="tab"] { height: 50px; white-space: pre-wrap; background-color: #f0f2f6; border-radius: 5px; color: #555; }
-    .stTabs [aria-selected="true"] { background-color: #ff4b4b; color: white; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -40,7 +39,7 @@ with st.sidebar:
     else:
         api_key = None
 
-    if st.button("🗑️ Clear / Reset"):
+    if st.button("🗑️ Clear / Reset App"):
         st.session_state.topics = []
         st.session_state.generated_content = []
         st.session_state.toc_text = ""
@@ -54,9 +53,8 @@ def get_client():
     return OpenAI(api_key=api_key)
 
 def get_table_of_contents(client, grade, subject):
-    # Reduced to 5 topics to ensure high quality
     prompt = f"""
-    Generate a list of 5 key topics for {subject}, Grade {grade}.
+    Generate a numbered Table of Contents (exactly 5 key topics) for {subject}, Grade {grade}.
     Output format STRICTLY:
     1. Topic Name
     2. Topic Name
@@ -89,29 +87,28 @@ def generate_topic_json(client, grade, subject, mode, topic, sequence_num):
         exp_context = "HOME/DIY EXPERIMENT"
         exp_guide = "Search for videos showing 'at-home' science using household items."
 
-    # --- ADVANCED PROMPT FOR VIDEOS ---
+    # --- ADVANCED PROMPT ---
     MASTER_PROMPT = f"""
-    You are a Video Recommendation Engine for Teachers.
+    You are EduPlan Pro, a curriculum expert.
     Subject: {subject} | Grade: {grade} | Topic: {topic} | Mode: {exp_context}
 
-    YOUR GOAL: Provide valid YouTube links for this topic.
-    
-    RULES:
-    1. **Sources:** Khan Academy, CrashCourse, TED-Ed, SciShow, Veritasium, National Geographic, SpanglerScience, Steve Mould.
-    2. **No Duplicates:** The Theory video and Experiment video MUST be different.
-    3. **Accuracy:** If you are not 100% sure a specific URL exists, provide a generic search query instead.
-    
+    YOUR GOAL: Provide a structured lesson plan with VALID video resources.
+
+    VIDEO RULES:
+    1. Sources: Khan Academy, CrashCourse, TED-Ed, SciShow, National Geographic, Steve Mould, Veritasium.
+    2. SEPARATION: 'Theory Videos' must explain concepts. 'Experiment Videos' must show the practical demo.
+    3. LINKS: Provide exact YouTube URLs (https://www.youtube.com/watch?v=...) ONLY if you are 100% sure they exist. 
+       If unsure, provide a high-quality "search_term" instead.
+
     OUTPUT JSON STRUCTURE:
     {{
         "title": "{topic}",
-        "summary": "1 sentence summary.",
+        "overview": "2 sentence summary.",
         "theory_videos": [
-            {{"title": "Detailed Theory Lesson", "url": "https://www.youtube.com/watch?v=..."}},
-            {{"title": "Visual Explanation", "url": "https://www.youtube.com/watch?v=..."}}
+            {{"title": "Concept Explanation", "url": "...", "search_term": "{topic} explanation crashcourse"}}
         ],
         "experiment_videos": [
-            {{"title": "{exp_context} Demonstration 1", "url": "https://www.youtube.com/watch?v=..."}},
-            {{"title": "{exp_context} Demonstration 2", "url": "https://www.youtube.com/watch?v=..."}}
+            {{"title": "{exp_context} Demo", "url": "...", "search_term": "{topic} {mode} experiment"}}
         ],
         "experiment_guide": {{
             "materials": ["Item 1", "Item 2"],
@@ -138,115 +135,134 @@ def generate_topic_json(client, grade, subject, mode, topic, sequence_num):
 
 # --- MAIN APP UI ---
 
-st.title("🎬 EduPlan: Video Recommender")
-st.caption("AI-Powered Curriculum & Video Finder")
+st.title("🎓 EduPlan Pro")
+st.caption("AI Curriculum & Video Resource Generator")
 
-# 1. TOP BAR INPUTS (Minimal)
-col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+# 1. TOP BAR INPUTS (Restored)
+col1, col2, col3 = st.columns([2, 1, 1])
 with col1:
     subject = st.text_input("Subject", placeholder="e.g. Physics")
 with col2:
     grade = st.text_input("Grade", placeholder="e.g. 8")
 with col3:
     mode = st.selectbox("Mode", ["Physical (Classroom)", "Online (Home)"])
-with col4:
-    st.write("") # Spacer
-    if st.button("🚀 Find Topics", type="primary"):
-        if not subject or not grade:
-            st.warning("Enter Subject & Grade")
-        else:
-            client = get_client()
-            with st.spinner("Searching..."):
-                toc = get_table_of_contents(client, grade, subject)
-                if toc:
-                    st.session_state.toc_text = toc
-                    st.session_state.topics = parse_topics(toc)
-                    st.session_state.generated_content = [] # Clear old content
-                    st.rerun()
 
-st.divider()
+st.markdown("---")
 
-# 2. SELECTION & GENERATION
-if st.session_state.topics and not st.session_state.generated_content:
-    st.subheader(f"Select Topics for {subject}")
-    
-    # Selection UI
-    col_s1, col_s2 = st.columns([3, 1])
-    with col_s1:
-        selected_topics_list = st.multiselect("Choose topics to generate:", st.session_state.topics, default=st.session_state.topics)
-    
-    with col_s2:
-        if st.button(f"✨ Get Videos ({len(selected_topics_list)})", type="primary", use_container_width=True):
-            client = get_client()
-            progress_bar = st.progress(0)
-            
-            # Map selection back to index
-            selected_indices = [(i+1, t) for i, t in enumerate(st.session_state.topics) if t in selected_topics_list]
-            
-            for i, (seq, topic_name) in enumerate(selected_indices):
-                data, tokens = generate_topic_json(client, grade, subject, mode, topic_name, seq)
-                if data:
-                    st.session_state.generated_content.append(data)
-                progress_bar.progress((i + 1) / len(selected_indices))
-            
-            st.rerun()
+# SECTION 1: Generate Topics
+if not st.session_state.topics:
+    col_c = st.columns([1, 2, 1])
+    with col_c[1]:
+        if st.button("🚀 Generate Table of Contents", type="primary", use_container_width=True):
+            if not subject or not grade:
+                st.warning("Please fill in Subject and Grade.")
+            else:
+                client = get_client()
+                with st.spinner("Brainstorming topics..."):
+                    toc = get_table_of_contents(client, grade, subject)
+                    if toc:
+                        st.session_state.toc_text = toc
+                        st.session_state.topics = parse_topics(toc)
+                        st.rerun()
 
-# 3. RESULTS DISPLAY (Minimal & Video-Focused)
-if st.session_state.generated_content:
+# SECTION 2: Topic Selection
+elif not st.session_state.generated_content:
+    st.info(f"Topics found for **{subject}**")
     
-    # Tabs for each topic
-    topic_names = [item['title'] for item in st.session_state.generated_content]
-    if not topic_names:
-        st.error("No content generated. Please try again.")
+    # Show TOC
+    with st.expander("📂 View Topic List", expanded=True):
+        st.text(st.session_state.toc_text)
+    
+    # Selection Controls
+    col_sel1, col_sel2 = st.columns([1, 2])
+    with col_sel1:
+        selection_mode = st.radio("Selection:", ["Generate ALL Topics", "Select Single Topic"])
+    
+    selected_topics = []
+    if selection_mode == "Select Single Topic":
+        with col_sel2:
+            chosen = st.selectbox("Choose Topic:", st.session_state.topics)
+            idx = st.session_state.topics.index(chosen) + 1
+            selected_topics = [(idx, chosen)]
     else:
-        tabs = st.tabs(topic_names)
+        selected_topics = [(i+1, t) for i, t in enumerate(st.session_state.topics)]
 
-        for i, tab in enumerate(tabs):
-            item = st.session_state.generated_content[i]
+    if st.button(f"✨ Generate Content ({len(selected_topics)} Topics)", type="primary"):
+        client = get_client()
+        progress_bar = st.progress(0)
+        
+        for i, (seq, topic_name) in enumerate(selected_topics):
+            data, tokens = generate_topic_json(client, grade, subject, mode, topic_name, seq)
+            if data:
+                st.session_state.generated_content.append(data)
+            progress_bar.progress((i + 1) / len(selected_topics))
+        
+        st.rerun()
+
+# SECTION 3: RESULTS DISPLAY (Restored Card Layout)
+else:
+    st.success("✅ Content Generated Successfully!")
+    
+    # Loop through results
+    for idx, item in enumerate(st.session_state.generated_content):
+        with st.container():
+            st.markdown(f"<h2 class='topic-header'>📌 Topic {idx+1}: {item.get('title')}</h2>", unsafe_allow_html=True)
             
-            with tab:
-                st.info(f"**Topic Summary:** {item.get('summary')}")
+            # Overview
+            st.info(f"**Overview:** {item.get('overview')}")
+            
+            # --- VIDEO SECTION (Split Columns) ---
+            v_col1, v_col2 = st.columns(2)
+            
+            # Left: Theory
+            with v_col1:
+                st.markdown("### 🧠 Theory Videos")
+                for vid in item.get('theory_videos', []):
+                    with st.container():
+                        st.caption(f"**{vid.get('title')}**")
+                        url = vid.get('url', '')
+                        # Try to Embed
+                        if "youtube.com" in url or "youtu.be" in url:
+                            st.video(url)
+                        # Fallback to Search Button
+                        else:
+                            clean_search = vid.get('search_term', item['title'] + ' theory').replace(" ", "+")
+                            st.markdown(f"""
+                                <a href="https://www.youtube.com/results?search_query={clean_search}" target="_blank">
+                                    <button style="width:100%; padding:8px; border-radius:5px; background-color:#ff4b4b; color:white; border:none; cursor:pointer;">
+                                        ▶️ Search: {vid.get('title')}
+                                    </button>
+                                </a>
+                            """, unsafe_allow_html=True)
+
+            # Right: Experiment
+            with v_col2:
+                st.markdown(f"### 🧪 Experiment Videos ({mode})")
+                for vid in item.get('experiment_videos', []):
+                    with st.container():
+                        st.caption(f"**{vid.get('title')}**")
+                        url = vid.get('url', '')
+                        if "youtube.com" in url or "youtu.be" in url:
+                            st.video(url)
+                        else:
+                            clean_search = vid.get('search_term', item['title'] + ' experiment').replace(" ", "+")
+                            st.markdown(f"""
+                                <a href="https://www.youtube.com/results?search_query={clean_search}" target="_blank">
+                                    <button style="width:100%; padding:8px; border-radius:5px; background-color:#2e86c1; color:white; border:none; cursor:pointer;">
+                                        🔍 Search: {vid.get('title')}
+                                    </button>
+                                </a>
+                            """, unsafe_allow_html=True)
+
+            # --- INSTRUCTIONS SECTION ---
+            st.markdown("---")
+            with st.expander(f"📝 View Experiment Instructions ({mode})", expanded=False):
+                st.markdown("**Materials:**")
+                for mat in item.get('experiment_guide', {}).get('materials', []):
+                    st.markdown(f"- {mat}")
                 
-                # --- SECTION 1: THEORY VIDEOS ---
-                st.markdown("### 🧠 Theory & Concepts")
-                t_cols = st.columns(2)
-                for idx, vid in enumerate(item.get('theory_videos', [])):
-                    with t_cols[idx % 2]:
-                        st.caption(f"**{vid.get('title')}**")
-                        url = vid.get('url', '')
-                        if "youtube.com" in url or "youtu.be" in url:
-                            st.video(url)
-                        else:
-                            st.write(f"🔗 [Watch Video]({url})")
-
-                # --- SECTION 2: EXPERIMENT VIDEOS ---
-                st.markdown("---")
-                st.markdown(f"### 🧪 Practical Experiments ({mode})")
-                e_cols = st.columns(2)
-                for idx, vid in enumerate(item.get('experiment_videos', [])):
-                    with e_cols[idx % 2]:
-                        st.caption(f"**{vid.get('title')}**")
-                        url = vid.get('url', '')
-                        if "youtube.com" in url or "youtu.be" in url:
-                            st.video(url)
-                        else:
-                            st.write(f"🔗 [Watch Video]({url})")
-
-                # --- SECTION 3: INSTRUCTIONS (Collapsed) ---
-                st.markdown("---")
-                with st.expander("📝 View Experiment Instructions & Materials"):
-                    st.markdown("**Materials Needed:**")
-                    materials = item.get('experiment_guide', {}).get('materials', [])
-                    if materials:
-                        for mat in materials:
-                            st.markdown(f"- {mat}")
-                    else:
-                        st.write("No specific materials listed.")
-                    
-                    st.markdown("**Step-by-Step:**")
-                    steps = item.get('experiment_guide', {}).get('steps', [])
-                    if steps:
-                        for step in steps:
-                            st.markdown(f"- {step}")
-                    else:
-                        st.write("No steps available.")
+                st.markdown("**Procedure:**")
+                for step in item.get('experiment_guide', {}).get('steps', []):
+                    st.markdown(f"- {step}")
+            
+            st.markdown("<br>", unsafe_allow_html=True)
