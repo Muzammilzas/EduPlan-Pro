@@ -28,7 +28,7 @@ with st.sidebar:
     st.title("⚙️ Configuration")
     
     # Secure API Key Handling
-    api_key = st.text_input("OpenAI API Key", type="password", placeholder="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")
+    api_key = st.text_input("OpenAI API Key", type="password", placeholder="sk-proj")
     
     # Try to load from secrets if input is empty
     if not api_key and "OPENAI_API_KEY" in st.secrets:
