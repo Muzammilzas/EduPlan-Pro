@@ -94,6 +94,8 @@ st.markdown("""
         border-bottom: 1px solid #e2e8f0;
         font-size: 15px;
         line-height: 1.6;
+        color: #1a202c;
+        font-weight: 500;
     }
     
     .list-item:last-child {
@@ -202,6 +204,8 @@ st.markdown("""
         border-left: 4px solid #fbbf24;
         font-size: 15px;
         line-height: 1.7;
+        color: #1a202c;
+        font-weight: 500;
     }
     
     .step-number {
@@ -444,25 +448,30 @@ Create an engaging activity with:
 
 5. VIDEO RESOURCES
 
+CRITICAL: Generate 10-12 TOTAL videos with diverse, highly relevant content:
+- 6-8 videos of type "Theory" for conceptual learning
+- 4-6 videos of type "Experiment Demo" for practical demonstrations
+
+**MODE-SPECIFIC EXPERIMENT VIDEOS:**
+{video_guide}
+
 For each video, provide:
-- title: Descriptive title for the video content
-- channel: Suggested educational channel
-- search_query: Specific YouTube search query for this topic
+- title: Descriptive, specific title
+- channel: Real educational channel (Khan Academy, CrashCourse, TED-Ed, Veritasium, SciShow, Bozeman Science, MIT OpenCourseWare, etc.)
+- search_query: HIGHLY SPECIFIC search query that will find the exact video type needed
 - description: What students will learn (2-3 sentences)
 - type: "Theory" or "Experiment Demo"
 - duration: Estimated video length
 
-Create 4-6 video entries with SPECIFIC search queries that will find relevant educational videos.
-
-EXAMPLE:
-{{
-    "title": "Introduction to {topic}",
-    "channel": "Khan Academy",
-    "search_query": "{topic} Khan Academy tutorial",
-    "description": "A comprehensive introduction to the fundamental concepts.",
-    "type": "Theory",
-    "duration": "10:00"
-}}
+**SEARCH QUERY REQUIREMENTS:**
+- Include channel name for better results
+- Include specific keywords related to {topic}
+- For experiments, include "{exp_context}" keywords
+- Examples: 
+  - "{topic} Khan Academy tutorial"
+  - "{topic} CrashCourse chemistry"
+  - "{topic} {exp_context} experiment demonstration"
+  - "{topic} laboratory procedure Bozeman Science"
 
 OUTPUT AS VALID JSON:
 {{
@@ -498,7 +507,7 @@ OUTPUT AS VALID JSON:
         {{
             "title": "Introduction to {topic}",
             "channel": "Khan Academy",
-            "search_query": "{topic} Khan Academy",
+            "search_query": "{topic} Khan Academy tutorial",
             "description": "Comprehensive introduction to fundamental concepts.",
             "type": "Theory",
             "duration": "10:00"
@@ -520,33 +529,81 @@ OUTPUT AS VALID JSON:
             "duration": "5:30"
         }},
         {{
-            "title": "{topic} Experiment",
+            "title": "{topic} Deep Dive",
+            "channel": "Veritasium",
+            "search_query": "{topic} Veritasium explained",
+            "description": "In-depth exploration with real-world examples.",
+            "type": "Theory",
+            "duration": "14:00"
+        }},
+        {{
+            "title": "{topic} Fundamentals",
+            "channel": "Professor Dave Explains",
+            "search_query": "{topic} Professor Dave tutorial",
+            "description": "Clear explanation of fundamental principles.",
+            "type": "Theory",
+            "duration": "8:30"
+        }},
+        {{
+            "title": "{topic} Advanced Concepts",
+            "channel": "MIT OpenCourseWare",
+            "search_query": "{topic} MIT lecture",
+            "description": "Advanced concepts and applications.",
+            "type": "Theory",
+            "duration": "20:00"
+        }},
+        {{
+            "title": "{topic} Quick Review",
+            "channel": "Amoeba Sisters",
+            "search_query": "{topic} Amoeba Sisters",
+            "description": "Quick, engaging review of key points.",
+            "type": "Theory",
+            "duration": "6:00"
+        }},
+        {{
+            "title": "{topic} Practical Guide",
             "channel": "SciShow",
-            "search_query": "{topic} experiment demonstration",
-            "description": "Practical demonstration of concepts.",
+            "search_query": "{topic} SciShow science",
+            "description": "Practical applications and interesting facts.",
+            "type": "Theory",
+            "duration": "9:00"
+        }},
+        {{
+            "title": "{topic} {exp_context} Experiment",
+            "channel": "SciShow",
+            "search_query": "{topic} {exp_context} experiment demonstration",
+            "description": "Hands-on demonstration using {exp_context} materials.",
             "type": "Experiment Demo",
             "duration": "8:45"
         }},
         {{
-            "title": "{topic} Lab Demo",
+            "title": "{topic} Lab Procedure",
             "channel": "Bozeman Science",
-            "search_query": "{topic} laboratory procedure",
-            "description": "Step-by-step lab procedures.",
+            "search_query": "{topic} {exp_context} laboratory procedure Bozeman",
+            "description": "Step-by-step {exp_context} lab procedures.",
             "type": "Experiment Demo",
             "duration": "15:00"
         }},
         {{
-            "title": "{topic} Real World",
+            "title": "{topic} Practical Demo",
+            "channel": "The Organic Chemistry Tutor",
+            "search_query": "{topic} {exp_context} practical demonstration",
+            "description": "Detailed {exp_context} practical demonstration.",
+            "type": "Experiment Demo",
+            "duration": "12:00"
+        }},
+        {{
+            "title": "{topic} Real World Application",
             "channel": "Veritasium",
-            "search_query": "{topic} real world application",
-            "description": "Real-world applications and examples.",
+            "search_query": "{topic} real world application experiment",
+            "description": "Real-world applications with experimental proof.",
             "type": "Experiment Demo",
             "duration": "11:00"
         }}
     ]
 }}
 
-CRITICAL: Output ONLY valid JSON. Use specific search queries that will find relevant educational videos.
+CRITICAL: Output ONLY valid JSON. Generate 10-12 videos total with highly specific search queries.
 """
     
     try:
@@ -578,54 +635,130 @@ CRITICAL: Output ONLY valid JSON. Use specific search queries that will find rel
         return None, 0
 
 def render_video_section(videos, section_title, section_icon):
-    """Render videos using YouTube iframe embeds - guaranteed to work!"""
+    """Render videos in a horizontal scrollable container - supports any number of videos!"""
     if not videos:
         return
     
     st.markdown(f'<div class="video-section-header">{section_icon} {section_title} ({len(videos)} Videos)</div>', unsafe_allow_html=True)
     
-    # Create columns for horizontal layout
-    cols = st.columns(min(len(videos), 3))  # Max 3 videos per row
+    # Build horizontal scrollable container with all videos
+    html_content = """
+    <style>
+        .video-scroll-container {
+            display: flex;
+            overflow-x: auto;
+            overflow-y: hidden;
+            gap: 20px;
+            padding: 20px 0;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+        .video-scroll-container::-webkit-scrollbar {
+            height: 10px;
+        }
+        .video-scroll-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .video-scroll-container::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+        .video-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+        .video-card-scroll {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 350px;
+            max-width: 350px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+        }
+        .video-card-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: #1a202c;
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        .video-card-channel {
+            font-size: 13px;
+            color: #718096;
+            margin-bottom: 10px;
+        }
+        .video-card-desc {
+            font-size: 13px;
+            color: #4a5568;
+            margin-bottom: 12px;
+            line-height: 1.5;
+            padding: 8px;
+            background: #f7fafc;
+            border-radius: 6px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+    </style>
+    <div class="video-scroll-container">
+    """
     
     for idx, video in enumerate(videos):
-        col_idx = idx % 3
-        with cols[col_idx]:
-            # Video info
-            v_title = video.get('title', 'Educational Video')
-            v_channel = video.get('channel', 'YouTube')
-            v_duration = video.get('duration', 'Varies')
-            v_desc = video.get('description', 'Educational content')
-            
-            st.markdown(f"**📺 {v_title}**")
-            st.caption(f"by {v_channel} • {v_duration}")
-            st.info(v_desc)
-            
-            # Get the real YouTube URL
-            real_url = video.get('real_url', None)
-            
-            if real_url:
-                # Extract video ID and create iframe embed
-                video_id = extract_video_id(real_url)
-                if video_id:
-                    # Use HTML iframe for YouTube embed - this ALWAYS works
-                    iframe_html = f"""
-                    <iframe 
-                        width="100%" 
-                        height="200" 
-                        src="https://www.youtube.com/embed/{video_id}" 
-                        frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowfullscreen
-                        style="border-radius: 8px; margin-bottom: 10px;">
-                    </iframe>
-                    """
-                    st.markdown(iframe_html, unsafe_allow_html=True)
-                else:
-                    st.error("Could not extract video ID")
+        v_title = str(video.get('title', 'Educational Video')).replace('<', '&lt;').replace('>', '&gt;')
+        v_channel = str(video.get('channel', 'YouTube')).replace('<', '&lt;').replace('>', '&gt;')
+        v_duration = str(video.get('duration', 'Varies')).replace('<', '&lt;').replace('>', '&gt;')
+        v_desc = str(video.get('description', 'Educational content')).replace('<', '&lt;').replace('>', '&gt;')
+        
+        real_url = video.get('real_url', None)
+        
+        html_content += f"""
+        <div class="video-card-scroll">
+            <div class="video-card-title">📺 {v_title}</div>
+            <div class="video-card-channel">by {v_channel} • {v_duration}</div>
+            <div class="video-card-desc">📝 {v_desc}</div>
+        """
+        
+        if real_url:
+            video_id = extract_video_id(real_url)
+            if video_id:
+                html_content += f"""
+                <iframe 
+                    width="310" 
+                    height="200" 
+                    src="https://www.youtube.com/embed/{video_id}" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen
+                    style="border-radius: 8px;">
+                </iframe>
+                """
             else:
-                st.warning("Video not available - search failed")
-            
-            st.markdown("<br>", unsafe_allow_html=True)
+                html_content += """
+                <div style="width: 310px; height: 200px; background: #f1f1f1; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999;">
+                    Could not load video
+                </div>
+                """
+        else:
+            html_content += """
+            <div style="width: 310px; height: 200px; background: #f1f1f1; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999;">
+                Video not available
+            </div>
+            """
+        
+        html_content += "</div>"
+    
+    html_content += "</div>"
+    
+    # Use components.html for rendering
+    components.html(html_content, height=400, scrolling=False)
 
 
 # --- MAIN APP ---
@@ -764,7 +897,7 @@ else:
         st.markdown(f"""
             <div class="overview-box">
                 <strong style="color: #667eea; font-size: 18px;">📖 Overview</strong><br><br>
-                <span style="color: #2d3748;">{overview_text}</span>
+                <span style="color: #1a202c; font-weight: 500;">{overview_text}</span>
             </div>
         """, unsafe_allow_html=True)
         
@@ -776,7 +909,7 @@ else:
             st.markdown('<div class="objectives-list">', unsafe_allow_html=True)
             for obj in item.get('objectives', []):
                 obj_text = str(obj).replace('<', '&lt;').replace('>', '&gt;')
-                st.markdown(f'<div class="list-item"><span style="color: #2d3748;">✓ {obj_text}</span></div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="list-item"><span style="color: #1a202c; font-weight: 500;">✓ {obj_text}</span></div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
         
         with col2:
@@ -784,7 +917,7 @@ else:
             st.markdown('<div class="materials-list">', unsafe_allow_html=True)
             for mat in item.get('materials', []):
                 mat_text = str(mat).replace('<', '&lt;').replace('>', '&gt;')
-                st.markdown(f'<div class="list-item"><span style="color: #2d3748;">• {mat_text}</span></div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="list-item"><span style="color: #1a202c; font-weight: 500;">• {mat_text}</span></div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
         
         # Videos Section
@@ -814,7 +947,7 @@ else:
                 st.markdown(f"""
                     <div class="step-item">
                         <span class="step-number">{i}</span>
-                        <span style="color: #2d3748;">{step_text}</span>
+                        <span style="color: #1a202c; font-weight: 500;">{step_text}</span>
                     </div>
                 """, unsafe_allow_html=True)
             
