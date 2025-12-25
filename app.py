@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import os
 import re
 import json
@@ -108,49 +107,13 @@ st.markdown("""
         font-weight: 600;
     }
     
-    .video-scroll-container {
-        display: flex;
-        overflow-x: auto;
-        gap: 20px;
-        padding: 20px 0;
-        scroll-behavior: smooth;
-        -webkit-overflow-scrolling: touch;
-    }
-    
-    .video-scroll-container::-webkit-scrollbar {
-        height: 8px;
-    }
-    
-    .video-scroll-container::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
-    }
-    
-    .video-scroll-container::-webkit-scrollbar-thumb {
-        background: #667eea;
-        border-radius: 10px;
-    }
-    
-    .video-scroll-container::-webkit-scrollbar-thumb:hover {
-        background: #764ba2;
-    }
-    
     .video-container {
         background: white;
         border-radius: 12px;
         padding: 20px;
-        min-width: 400px;
-        max-width: 400px;
-        flex-shrink: 0;
+        margin-bottom: 25px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         border: 1px solid #e2e8f0;
-    }
-    
-    @media (max-width: 768px) {
-        .video-container {
-            min-width: 300px;
-            max-width: 300px;
-        }
     }
     
     .video-title {
@@ -232,8 +195,6 @@ if 'subject_name' not in st.session_state:
     st.session_state.subject_name = ""
 if 'grade_level' not in st.session_state:
     st.session_state.grade_level = ""
-if 'mode' not in st.session_state:
-    st.session_state.mode = "Physical (Classroom)"
 
 # --- SIDEBAR ---
 with st.sidebar:
@@ -264,7 +225,6 @@ with st.sidebar:
         st.session_state.toc_text = ""
         st.session_state.subject_name = ""
         st.session_state.grade_level = ""
-        st.session_state.mode = "Physical (Classroom)"
         st.rerun()
 
 # --- HELPER FUNCTIONS ---
@@ -400,27 +360,35 @@ Create an engaging activity with:
 - Safety notes (if applicable)
 - Expected outcomes
 
-5. VIDEO RESOURCES
+5. VIDEO RESOURCES - PROVIDE REAL YOUTUBE URLS
+Find 4-6 high-quality educational videos with REAL, WORKING YouTube URLs.
 
-For each video, provide:
-- title: Descriptive title for the video content
-- channel: Suggested educational channel
-- search_query: Specific YouTube search query for this topic
-- description: What students will learn (2-3 sentences)
+TRUSTED CHANNELS TO USE:
+- Khan Academy
+- CrashCourse
+- TED-Ed
+- SciShow
+- Veritasium
+- National Geographic
+- Amoeba Sisters (Biology)
+- Bozeman Science
+- The Organic Chemistry Tutor
+- Professor Dave Explains
+- MIT OpenCourseWare
+
+VIDEO REQUIREMENTS:
+- Provide ACTUAL YouTube URLs (https://www.youtube.com/watch?v=...)
+- 2-3 videos on THEORY/CONCEPTS (Type: "Theory")
+- 2-3 videos on EXPERIMENTS/DEMOS (Type: "Experiment Demo")
+{video_guide}
+
+For each video provide:
+- title: Exact video title from YouTube
+- channel: Channel name
+- url: Complete working YouTube URL
+- description: What students learn (2-3 sentences)
 - type: "Theory" or "Experiment Demo"
-- duration: Estimated video length
-
-Create 4-6 video entries with SPECIFIC search queries that will find relevant educational videos.
-
-EXAMPLE:
-{{
-    "title": "Introduction to {topic}",
-    "channel": "Khan Academy",
-    "search_query": "{topic} Khan Academy tutorial",
-    "description": "A comprehensive introduction to the fundamental concepts.",
-    "type": "Theory",
-    "duration": "10:00"
-}}
+- duration: Estimated length
 
 OUTPUT AS VALID JSON:
 {{
@@ -454,57 +422,57 @@ OUTPUT AS VALID JSON:
     }},
     "videos": [
         {{
-            "title": "Introduction to {topic}",
+            "title": "Real Video Title",
             "channel": "Khan Academy",
-            "search_query": "{topic} Khan Academy",
-            "description": "Comprehensive introduction to fundamental concepts.",
+            "url": "https://www.youtube.com/watch?v=REAL_ID",
+            "description": "Detailed description of video content...",
             "type": "Theory",
-            "duration": "10:00"
+            "duration": "10:30"
         }},
         {{
-            "title": "{topic} Explained",
+            "title": "Real Video Title",
             "channel": "CrashCourse",
-            "search_query": "{topic} CrashCourse",
-            "description": "Engaging overview with visual explanations.",
+            "url": "https://www.youtube.com/watch?v=REAL_ID",
+            "description": "What students learn...",
             "type": "Theory",
             "duration": "12:00"
         }},
         {{
-            "title": "{topic} Visual Guide",
+            "title": "Real Video Title",
             "channel": "TED-Ed",
-            "search_query": "{topic} TED-Ed animation",
-            "description": "Animated explanation of key concepts.",
+            "url": "https://www.youtube.com/watch?v=REAL_ID",
+            "description": "Visual explanation...",
             "type": "Theory",
             "duration": "5:30"
         }},
         {{
-            "title": "{topic} Experiment",
+            "title": "Real Experiment Video",
             "channel": "SciShow",
-            "search_query": "{topic} experiment demonstration",
-            "description": "Practical demonstration of concepts.",
+            "url": "https://www.youtube.com/watch?v=REAL_ID",
+            "description": "Practical demonstration...",
             "type": "Experiment Demo",
             "duration": "8:45"
         }},
         {{
-            "title": "{topic} Lab Demo",
+            "title": "Real Lab Demo",
             "channel": "Bozeman Science",
-            "search_query": "{topic} laboratory procedure",
-            "description": "Step-by-step lab procedures.",
+            "url": "https://www.youtube.com/watch?v=REAL_ID",
+            "description": "Step-by-step procedure...",
             "type": "Experiment Demo",
-            "duration": "15:00"
+            "duration": "15:20"
         }},
         {{
-            "title": "{topic} Real World",
+            "title": "Additional Resource",
             "channel": "Veritasium",
-            "search_query": "{topic} real world application",
-            "description": "Real-world applications and examples.",
+            "url": "https://www.youtube.com/watch?v=REAL_ID",
+            "description": "Real-world application...",
             "type": "Experiment Demo",
             "duration": "11:00"
         }}
     ]
 }}
 
-CRITICAL: Output ONLY valid JSON. Use specific search queries that will find relevant educational videos.
+CRITICAL: Output ONLY valid JSON. All URLs must be real working YouTube links from popular educational videos.
 """
     
     try:
@@ -525,126 +493,36 @@ CRITICAL: Output ONLY valid JSON. Use specific search queries that will find rel
         st.error(f"Error generating content: {e}")
         return None, 0
 
-def render_video_section(videos, section_title, section_icon):
-    """Render a horizontal scrollable section of videos using YouTube search."""
-    if not videos:
-        return
+def render_embedded_video(video, index):
+    """Render embedded YouTube video with full details."""
+    video_url = video.get('url', '')
+    video_id = extract_video_id(video_url)
     
-    st.markdown(f'<div class="video-section-header">{section_icon} {section_title} ({len(videos)} Videos)</div>', unsafe_allow_html=True)
-    
-    # Build complete HTML with inline styles
-    html_content = """
-    <style>
-        .video-scroll-wrapper {
-            display: flex;
-            overflow-x: scroll !important;
-            overflow-y: hidden;
-            gap: 20px;
-            padding: 20px 0;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-        }
-        .video-scroll-wrapper::-webkit-scrollbar {
-            height: 10px !important;
-            display: block !important;
-        }
-        .video-scroll-wrapper::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        .video-scroll-wrapper::-webkit-scrollbar-thumb {
-            background: #667eea;
-            border-radius: 10px;
-        }
-        .video-scroll-wrapper::-webkit-scrollbar-thumb:hover {
-            background: #764ba2;
-        }
-        .video-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            min-width: 380px;
-            max-width: 380px;
-            flex-shrink: 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border: 1px solid #e2e8f0;
-        }
-        .vid-title {
-            font-weight: 600;
-            font-size: 16px;
-            color: #2d3748;
-            margin-bottom: 8px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-        }
-        .vid-channel {
-            font-size: 13px;
-            color: #718096;
-            margin-bottom: 10px;
-        }
-        .vid-desc {
-            font-size: 13px;
-            color: #4a5568;
-            margin-bottom: 12px;
-            line-height: 1.5;
-            padding: 8px;
-            background: #f7fafc;
-            border-radius: 6px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-        }
-    </style>
-    <div class="video-scroll-wrapper">
-    """
-    
-    for idx, video in enumerate(videos):
-        # Use search_query if available, otherwise construct from title and channel
-        search_query = video.get('search_query', '')
-        if not search_query:
-            # Fallback: construct search query from title and channel
-            title = video.get('title', 'Educational Video')
-            channel = video.get('channel', '')
-            search_query = f"{title} {channel}".strip()
+    if video_id:
+        st.markdown(f"""
+            <div class="video-container">
+                <div class="video-title">📺 {video.get('title', 'Educational Video')}</div>
+                <div class="video-channel">by {video.get('channel', 'YouTube')} • {video.get('duration', 'Length varies')}</div>
+                <div class="video-description">📝 {video.get('description', 'Educational content covering key concepts.')}</div>
+            </div>
+        """, unsafe_allow_html=True)
         
-        # URL encode the search query for YouTube
-        import urllib.parse
-        encoded_query = urllib.parse.quote(search_query)
-        
-        # Use YouTube search embed - this ALWAYS works and shows relevant videos
-        embed_url = f"https://www.youtube.com/embed?listType=search&list={encoded_query}"
-        
-        v_title = str(video.get('title', 'Educational Video')).replace('<', '&lt;').replace('>', '&gt;')
-        v_channel = str(video.get('channel', 'YouTube')).replace('<', '&lt;').replace('>', '&gt;')
-        v_duration = str(video.get('duration', 'Varies')).replace('<', '&lt;').replace('>', '&gt;')
-        v_desc = str(video.get('description', 'Educational content')).replace('<', '&lt;').replace('>', '&gt;')
-        
-        html_content += f"""
-        <div class="video-card">
-            <div class="vid-title">📺 {v_title}</div>
-            <div class="vid-channel">by {v_channel} • {v_duration}</div>
-            <div class="vid-desc">📝 {v_desc}</div>
-            <iframe 
-                width="100%" 
-                height="215" 
-                src="{embed_url}" 
+        # Embed video
+        try:
+            st.video(f"https://www.youtube.com/watch?v={video_id}")
+        except Exception as e:
+            st.markdown(f"""
+                <iframe width="100%" height="400" 
+                src="https://www.youtube.com/embed/{video_id}" 
                 frameborder="0" 
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowfullscreen
-                style="border-radius: 8px;">
-            </iframe>
-        </div>
-        """
-    
-    html_content += "</div>"
-    
-    # Use components.html for better rendering with increased height for scrollbar
-    components.html(html_content, height=420, scrolling=False)
+                allowfullscreen>
+                </iframe>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+    else:
+        st.warning(f"⚠️ Video unavailable: {video.get('title', 'Unknown')}")
 
 # --- MAIN APP ---
 st.markdown("""
@@ -665,7 +543,7 @@ if not st.session_state.topics:
         grade = st.text_input("🎯 Grade Level", placeholder="e.g. 9")
     
     with col3:
-        st.session_state.mode = st.radio("🏫 Learning Mode", ["Physical (Classroom)", "Online (Virtual)"], index=0 if st.session_state.mode == "Physical (Classroom)" else 1)
+        mode = st.radio("🏫 Learning Mode", ["Physical (Classroom)", "Online (Virtual)"])
     
     st.markdown("<br>", unsafe_allow_html=True)
     
@@ -748,7 +626,7 @@ elif not st.session_state.generated_content:
                     client, 
                     st.session_state.grade_level, 
                     st.session_state.subject_name, 
-                    st.session_state.mode, 
+                    mode, 
                     topic_name, 
                     seq
                 )
@@ -811,9 +689,15 @@ else:
             theory_videos = [v for v in videos if v.get('type') == 'Theory']
             experiment_videos = [v for v in videos if v.get('type') == 'Experiment Demo']
             
-            # Render each section with horizontal scroll
-            render_video_section(theory_videos, "Conceptual Learning", "🧠")
-            render_video_section(experiment_videos, "Experiments & Demonstrations", "🔬")
+            if theory_videos:
+                st.markdown(f'<div class="video-section-header">🧠 Conceptual Learning ({len(theory_videos)} Videos)</div>', unsafe_allow_html=True)
+                for i, video in enumerate(theory_videos):
+                    render_embedded_video(video, i)
+            
+            if experiment_videos:
+                st.markdown(f'<div class="video-section-header">🔬 Experiments & Demonstrations ({len(experiment_videos)} Videos)</div>', unsafe_allow_html=True)
+                for i, video in enumerate(experiment_videos):
+                    render_embedded_video(video, i)
         
         # Experiment Section
         exp = item.get('experiment', {})
