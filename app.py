@@ -400,35 +400,52 @@ Create an engaging activity with:
 - Safety notes (if applicable)
 - Expected outcomes
 
-5. VIDEO RESOURCES - PROVIDE REAL YOUTUBE URLS
-Find 4-6 high-quality educational videos with REAL, WORKING YouTube URLs.
+5. VIDEO RESOURCES - CRITICAL: PROVIDE REAL, EXISTING YOUTUBE VIDEOS ONLY
 
-TRUSTED CHANNELS TO USE:
-- Khan Academy
-- CrashCourse
-- TED-Ed
-- SciShow
-- Veritasium
-- National Geographic
-- Amoeba Sisters (Biology)
-- Bozeman Science
-- The Organic Chemistry Tutor
-- Professor Dave Explains
-- MIT OpenCourseWare
+⚠️ IMPORTANT: You MUST provide REAL YouTube videos that ACTUALLY EXIST. Do NOT generate fake URLs.
+
+INSTRUCTIONS FOR FINDING REAL VIDEOS:
+1. Think of ACTUAL popular educational videos you know exist on YouTube
+2. Use videos from these VERIFIED channels that you know have content on this topic:
+   - Khan Academy (https://www.youtube.com/@khanacademy)
+   - CrashCourse (https://www.youtube.com/@crashcourse)
+   - TED-Ed (https://www.youtube.com/@TEDEd)
+   - SciShow (https://www.youtube.com/@SciShow)
+   - Veritasium (https://www.youtube.com/@veritasium)
+   - Bozeman Science (https://www.youtube.com/@bozemanscience)
+   - The Organic Chemistry Tutor (https://www.youtube.com/@TheOrganicChemistryTutor)
+   - Professor Dave Explains (https://www.youtube.com/@ProfessorDaveExplains)
+   - Amoeba Sisters (https://www.youtube.com/@AmoebaSisters) - Biology only
+   - National Geographic (https://www.youtube.com/@NatGeo)
+
+3. For {topic}, think of SPECIFIC videos you know these channels have made
+4. Provide the ACTUAL video title and URL
+5. If you're not 100% certain a video exists, use a general topic search URL format
 
 VIDEO REQUIREMENTS:
-- Provide ACTUAL YouTube URLs (https://www.youtube.com/watch?v=...)
+- Provide 4-6 videos total
 - 2-3 videos on THEORY/CONCEPTS (Type: "Theory")
 - 2-3 videos on EXPERIMENTS/DEMOS (Type: "Experiment Demo")
-{video_guide}
+- {video_guide}
+- Each URL must be a real YouTube link: https://www.youtube.com/watch?v=[VIDEO_ID]
 
 For each video provide:
-- title: Exact video title from YouTube
-- channel: Channel name
-- url: Complete working YouTube URL
-- description: What students learn (2-3 sentences)
+- title: The ACTUAL video title (be specific and realistic)
+- channel: The channel name from the list above
+- url: Complete YouTube URL (must be real and working)
+- description: What students will learn (2-3 sentences)
 - type: "Theory" or "Experiment Demo"
-- duration: Estimated length
+- duration: Realistic video length (e.g., "8:45", "12:30", "15:00")
+
+EXAMPLE FORMAT (use real videos like these):
+{{
+            "title": "Introduction to {topic}",
+            "channel": "Khan Academy",
+            "url": "https://www.youtube.com/watch?v=[REAL_VIDEO_ID]",
+            "description": "A comprehensive introduction covering the fundamental concepts.",
+            "type": "Theory",
+            "duration": "10:30"
+        }}
 
 OUTPUT AS VALID JSON:
 {{
@@ -545,13 +562,16 @@ def render_video_section(videos, section_title, section_icon):
     <style>
         .video-scroll-wrapper {
             display: flex;
-            overflow-x: auto;
+            overflow-x: scroll !important;
+            overflow-y: hidden;
             gap: 20px;
             padding: 20px 0;
             scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
         }
         .video-scroll-wrapper::-webkit-scrollbar {
-            height: 8px;
+            height: 10px !important;
+            display: block !important;
         }
         .video-scroll-wrapper::-webkit-scrollbar-track {
             background: #f1f1f1;
@@ -561,36 +581,48 @@ def render_video_section(videos, section_title, section_icon):
             background: #667eea;
             border-radius: 10px;
         }
+        .video-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
         .video-card {
             background: white;
             border-radius: 12px;
             padding: 20px;
-            min-width: 400px;
-            max-width: 400px;
+            min-width: 380px;
+            max-width: 380px;
             flex-shrink: 0;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             border: 1px solid #e2e8f0;
         }
         .vid-title {
             font-weight: 600;
-            font-size: 17px;
+            font-size: 16px;
             color: #2d3748;
             margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
         }
         .vid-channel {
-            font-size: 14px;
+            font-size: 13px;
             color: #718096;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .vid-desc {
-            font-size: 14px;
+            font-size: 13px;
             color: #4a5568;
-            margin-bottom: 15px;
-            line-height: 1.6;
-            padding: 10px;
+            margin-bottom: 12px;
+            line-height: 1.5;
+            padding: 8px;
             background: #f7fafc;
             border-radius: 6px;
-            font-style: italic;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
         }
     </style>
     <div class="video-scroll-wrapper">
@@ -613,7 +645,7 @@ def render_video_section(videos, section_title, section_icon):
                 <div class="vid-desc">📝 {v_desc}</div>
                 <iframe 
                     width="100%" 
-                    height="225" 
+                    height="215" 
                     src="https://www.youtube.com/embed/{video_id}" 
                     frameborder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
@@ -625,8 +657,8 @@ def render_video_section(videos, section_title, section_icon):
     
     html_content += "</div>"
     
-    # Use components.html for better rendering
-    components.html(html_content, height=400, scrolling=False)
+    # Use components.html for better rendering with increased height for scrollbar
+    components.html(html_content, height=420, scrolling=False)
 
 # --- MAIN APP ---
 st.markdown("""
