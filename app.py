@@ -107,13 +107,49 @@ st.markdown("""
         font-weight: 600;
     }
     
+    .video-scroll-container {
+        display: flex;
+        overflow-x: auto;
+        gap: 20px;
+        padding: 20px 0;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .video-scroll-container::-webkit-scrollbar {
+        height: 8px;
+    }
+    
+    .video-scroll-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .video-scroll-container::-webkit-scrollbar-thumb {
+        background: #667eea;
+        border-radius: 10px;
+    }
+    
+    .video-scroll-container::-webkit-scrollbar-thumb:hover {
+        background: #764ba2;
+    }
+    
     .video-container {
         background: white;
         border-radius: 12px;
         padding: 20px;
-        margin-bottom: 25px;
+        min-width: 400px;
+        max-width: 400px;
+        flex-shrink: 0;
         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         border: 1px solid #e2e8f0;
+    }
+    
+    @media (max-width: 768px) {
+        .video-container {
+            min-width: 300px;
+            max-width: 300px;
+        }
     }
     
     .video-title {
@@ -507,25 +543,23 @@ def render_embedded_video(video, index):
                 <div class="video-title">📺 {video.get('title', 'Educational Video')}</div>
                 <div class="video-channel">by {video.get('channel', 'YouTube')} • {video.get('duration', 'Length varies')}</div>
                 <div class="video-description">📝 {video.get('description', 'Educational content covering key concepts.')}</div>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        # Embed video
-        try:
-            st.video(f"https://www.youtube.com/watch?v={video_id}")
-        except Exception as e:
-            st.markdown(f"""
-                <iframe width="100%" height="400" 
+                <iframe width="100%" height="225" 
                 src="https://www.youtube.com/embed/{video_id}" 
                 frameborder="0" 
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowfullscreen>
+                allowfullscreen
+                style="border-radius: 8px; margin-top: 10px;">
                 </iframe>
-            """, unsafe_allow_html=True)
-        
-        st.markdown("<br>", unsafe_allow_html=True)
+            </div>
+        """, unsafe_allow_html=True)
     else:
-        st.warning(f"⚠️ Video unavailable: {video.get('title', 'Unknown')}")
+        st.markdown(f"""
+            <div class="video-container">
+                <div class="video-title">⚠️ {video.get('title', 'Video Unavailable')}</div>
+                <div class="video-channel">by {video.get('channel', 'YouTube')}</div>
+                <div class="video-description">Unable to load video. Please check the URL.</div>
+            </div>
+        """, unsafe_allow_html=True)
 
 # --- MAIN APP ---
 st.markdown("""
@@ -692,15 +726,20 @@ else:
             theory_videos = [v for v in videos if v.get('type') == 'Theory']
             experiment_videos = [v for v in videos if v.get('type') == 'Experiment Demo']
             
+            
             if theory_videos:
                 st.markdown(f'<div class="video-section-header">🧠 Conceptual Learning ({len(theory_videos)} Videos)</div>', unsafe_allow_html=True)
+                st.markdown('<div class="video-scroll-container">', unsafe_allow_html=True)
                 for i, video in enumerate(theory_videos):
                     render_embedded_video(video, i)
+                st.markdown('</div>', unsafe_allow_html=True)
             
             if experiment_videos:
                 st.markdown(f'<div class="video-section-header">🔬 Experiments & Demonstrations ({len(experiment_videos)} Videos)</div>', unsafe_allow_html=True)
+                st.markdown('<div class="video-scroll-container">', unsafe_allow_html=True)
                 for i, video in enumerate(experiment_videos):
                     render_embedded_video(video, i)
+                st.markdown('</div>', unsafe_allow_html=True)
         
         # Experiment Section
         exp = item.get('experiment', {})
