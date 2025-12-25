@@ -239,7 +239,7 @@ if st.session_state.generated_content:
                     materials = item.get('experiment_guide', {}).get('materials', [])
                     if materials:
                         for mat in materials:
-                            st.write(f"- {mat}")
+                            st.markdown(f"- {mat}")
                     else:
                         st.write("No specific materials listed.")
                     
@@ -247,6 +247,6 @@ if st.session_state.generated_content:
                     steps = item.get('experiment_guide', {}).get('steps', [])
                     if steps:
                         for step in steps:
-                            st.write(f"- {step}")
+                            st.markdown(f"- {step}")
                     else:
                         st.write("No steps available.")
