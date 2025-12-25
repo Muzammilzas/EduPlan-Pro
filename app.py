@@ -195,6 +195,8 @@ if 'subject_name' not in st.session_state:
     st.session_state.subject_name = ""
 if 'grade_level' not in st.session_state:
     st.session_state.grade_level = ""
+if 'mode' not in st.session_state:
+    st.session_state.mode = "Physical (Classroom)"
 
 # --- SIDEBAR ---
 with st.sidebar:
@@ -225,6 +227,7 @@ with st.sidebar:
         st.session_state.toc_text = ""
         st.session_state.subject_name = ""
         st.session_state.grade_level = ""
+        st.session_state.mode = "Physical (Classroom)"
         st.rerun()
 
 # --- HELPER FUNCTIONS ---
@@ -543,7 +546,7 @@ if not st.session_state.topics:
         grade = st.text_input("🎯 Grade Level", placeholder="e.g. 9")
     
     with col3:
-        mode = st.radio("🏫 Learning Mode", ["Physical (Classroom)", "Online (Virtual)"])
+        st.session_state.mode = st.radio("🏫 Learning Mode", ["Physical (Classroom)", "Online (Virtual)"], index=0 if st.session_state.mode == "Physical (Classroom)" else 1)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
@@ -626,7 +629,7 @@ elif not st.session_state.generated_content:
                     client, 
                     st.session_state.grade_level, 
                     st.session_state.subject_name, 
-                    mode, 
+                    st.session_state.mode, 
                     topic_name, 
                     seq
                 )
