@@ -41,7 +41,7 @@ st.markdown("""
     .topic-header {
         font-size: 30px;
         font-weight: 700;
-        color: #2d3748;
+        color: #1a202c;
         margin-bottom: 20px;
         display: flex;
         align-items: center;
@@ -65,7 +65,7 @@ st.markdown("""
     .section-header {
         font-size: 20px;
         font-weight: 600;
-        color: #4a5568;
+        color: #1a202c;
         margin-top: 30px;
         margin-bottom: 15px;
         padding-bottom: 10px;
@@ -73,17 +73,18 @@ st.markdown("""
     }
     
     .overview-box {
-        background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        background: white;
         border-left: 4px solid #667eea;
         padding: 25px;
         border-radius: 10px;
         margin: 15px 0;
         font-size: 16px;
         line-height: 1.8;
+        color: #1a202c;
     }
     
     .objectives-list, .materials-list {
-        background: #f7fafc;
+        background: white;
         padding: 20px;
         border-radius: 10px;
         margin: 10px 0;
@@ -182,17 +183,17 @@ st.markdown("""
     }
     
     .experiment-box {
-        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-        border: 2px solid #fbbf24;
-        border-radius: 12px;
-        padding: 30px;
-        margin: 30px 0;
+        background: white;
+        border-left: 4px solid #fbbf24;
+        padding: 25px;
+        border-radius: 10px;
+        margin: 20px 0;
     }
     
     .experiment-title {
-        font-size: 24px;
+        font-size: 22px;
         font-weight: 600;
-        color: #92400e;
+        color: #1a202c;
         margin-bottom: 20px;
     }
     
