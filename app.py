@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import os
 import re
 import json
@@ -539,39 +540,93 @@ def render_video_section(videos, section_title, section_icon):
     
     st.markdown(f'<div class="video-section-header">{section_icon} {section_title} ({len(videos)} Videos)</div>', unsafe_allow_html=True)
     
-    # Build all video cards in a single HTML string
-    video_cards_html = '<div class="video-scroll-container">'
+    # Build complete HTML with inline styles
+    html_content = """
+    <style>
+        .video-scroll-wrapper {
+            display: flex;
+            overflow-x: auto;
+            gap: 20px;
+            padding: 20px 0;
+            scroll-behavior: smooth;
+        }
+        .video-scroll-wrapper::-webkit-scrollbar {
+            height: 8px;
+        }
+        .video-scroll-wrapper::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .video-scroll-wrapper::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+        .video-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 400px;
+            max-width: 400px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+        }
+        .vid-title {
+            font-weight: 600;
+            font-size: 17px;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+        .vid-channel {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 12px;
+        }
+        .vid-desc {
+            font-size: 14px;
+            color: #4a5568;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 6px;
+            font-style: italic;
+        }
+    </style>
+    <div class="video-scroll-wrapper">
+    """
     
-    for video in videos:
+    for idx, video in enumerate(videos):
         video_url = video.get('url', '')
         video_id = extract_video_id(video_url)
         
         if video_id:
-            video_cards_html += f"""
-                <div class="video-container">
-                    <div class="video-title">📺 {video.get('title', 'Educational Video')}</div>
-                    <div class="video-channel">by {video.get('channel', 'YouTube')} • {video.get('duration', 'Length varies')}</div>
-                    <div class="video-description">📝 {video.get('description', 'Educational content covering key concepts.')}</div>
-                    <iframe width="100%" height="225" 
+            v_title = str(video.get('title', 'Educational Video')).replace('<', '&lt;').replace('>', '&gt;')
+            v_channel = str(video.get('channel', 'YouTube')).replace('<', '&lt;').replace('>', '&gt;')
+            v_duration = str(video.get('duration', 'Length varies')).replace('<', '&lt;').replace('>', '&gt;')
+            v_desc = str(video.get('description', 'Educational content')).replace('<', '&lt;').replace('>', '&gt;')
+            
+            html_content += f"""
+            <div class="video-card">
+                <div class="vid-title">📺 {v_title}</div>
+                <div class="vid-channel">by {v_channel} • {v_duration}</div>
+                <div class="vid-desc">📝 {v_desc}</div>
+                <iframe 
+                    width="100%" 
+                    height="225" 
                     src="https://www.youtube.com/embed/{video_id}" 
                     frameborder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                     allowfullscreen
-                    style="border-radius: 8px; margin-top: 10px;">
-                    </iframe>
-                </div>
-            """
-        else:
-            video_cards_html += f"""
-                <div class="video-container">
-                    <div class="video-title">⚠️ {video.get('title', 'Video Unavailable')}</div>
-                    <div class="video-channel">by {video.get('channel', 'YouTube')}</div>
-                    <div class="video-description">Unable to load video. Please check the URL.</div>
-                </div>
+                    style="border-radius: 8px;">
+                </iframe>
+            </div>
             """
     
-    video_cards_html += '</div>'
-    st.markdown(video_cards_html, unsafe_allow_html=True)
+    html_content += "</div>"
+    
+    # Use components.html for better rendering
+    components.html(html_content, height=400, scrolling=False)
 
 # --- MAIN APP ---
 st.markdown("""
