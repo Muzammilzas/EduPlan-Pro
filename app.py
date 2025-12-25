@@ -4,8 +4,8 @@ import os
 import re
 import json
 from openai import OpenAI
-# NEW: Import YouTube search library for real video embedding
-from youtubesearchpython import VideosSearch
+# Removed youtube-search-python - using direct HTTP scraping instead
+
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="EduPlan Pro", page_icon="🎓", layout="wide")
@@ -278,25 +278,43 @@ def get_openai_client():
 
 def get_real_youtube_video(search_query):
     """
-    NEW FUNCTION: Search YouTube and return the first real video URL.
-    This guarantees playable videos!
+    Search YouTube and return the first real video URL using direct HTTP scraping.
+    This is more reliable than the youtube-search-python library.
     """
     try:
-        videos_search = VideosSearch(search_query, limit=1)
-        results = videos_search.result()
-        if results and 'result' in results and len(results['result']) > 0:
-            video = results['result'][0]
-            video_url = video.get('link', None)
-            if video_url:
-                print(f"✅ Found video for '{search_query}': {video_url}")
+        import urllib.parse
+        import urllib.request
+        import re
+        
+        # Encode the search query
+        encoded_query = urllib.parse.quote(search_query)
+        search_url = f"https://www.youtube.com/results?search_query={encoded_query}"
+        
+        # Make HTTP request to YouTube search
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        req = urllib.request.Request(search_url, headers=headers)
+        
+        with urllib.request.urlopen(req, timeout=10) as response:
+            html = response.read().decode('utf-8')
+            
+            # Extract video ID using regex
+            # YouTube video IDs are in the format: "videoId":"VIDEO_ID_HERE"
+            pattern = r'"videoId":"([a-zA-Z0-9_-]{11})"'
+            matches = re.findall(pattern, html)
+            
+            if matches:
+                video_id = matches[0]  # Get the first video
+                video_url = f"https://www.youtube.com/watch?v={video_id}"
                 return video_url
             else:
-                print(f"❌ No link in result for '{search_query}'")
-        else:
-            print(f"❌ No results for '{search_query}'")
+                return None
+                
     except Exception as e:
-        print(f"❌ YouTube search error for '{search_query}': {e}")
-    return None
+        st.error(f"YouTube search failed for '{search_query}': {str(e)}")
+        return None
+
 
 def extract_video_id(url):
     """Extract YouTube video ID from various URL formats."""
@@ -544,25 +562,14 @@ CRITICAL: Output ONLY valid JSON. Use specific search queries that will find rel
         
         data = json.loads(response.choices[0].message.content)
         
-        # NEW: Fetch real YouTube videos for each search query
+        # Fetch real YouTube videos for each search query
         if 'videos' in data:
             for idx, video in enumerate(data['videos']):
                 search_query = video.get('search_query', '')
                 if search_query:
-                    # Try to get real video from YouTube search
+                    # Get real video from YouTube scraping
                     real_url = get_real_youtube_video(search_query)
-                    
-                    if real_url:
-                        video['real_url'] = real_url
-                    else:
-                        # FALLBACK: Construct a YouTube search URL
-                        # This will at least give users a way to find the video
-                        import urllib.parse
-                        encoded_query = urllib.parse.quote(search_query)
-                        # Use a direct YouTube video URL format that might work
-                        # We'll construct a search results URL as absolute fallback
-                        video['real_url'] = f"https://www.youtube.com/results?search_query={encoded_query}"
-                        video['is_search_url'] = True  # Flag to show it's a search link
+                    video['real_url'] = real_url if real_url else None
         
         return data, response.usage.total_tokens
     
@@ -571,7 +578,7 @@ CRITICAL: Output ONLY valid JSON. Use specific search queries that will find rel
         return None, 0
 
 def render_video_section(videos, section_title, section_icon):
-    """Render videos using Streamlit's native video player - much simpler and more reliable!"""
+    """Render videos using YouTube iframe embeds - guaranteed to work!"""
     if not videos:
         return
     
@@ -597,10 +604,26 @@ def render_video_section(videos, section_title, section_icon):
             real_url = video.get('real_url', None)
             
             if real_url:
-                # Use Streamlit's native video player - it handles YouTube URLs perfectly!
-                st.video(real_url)
+                # Extract video ID and create iframe embed
+                video_id = extract_video_id(real_url)
+                if video_id:
+                    # Use HTML iframe for YouTube embed - this ALWAYS works
+                    iframe_html = f"""
+                    <iframe 
+                        width="100%" 
+                        height="200" 
+                        src="https://www.youtube.com/embed/{video_id}" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen
+                        style="border-radius: 8px; margin-bottom: 10px;">
+                    </iframe>
+                    """
+                    st.markdown(iframe_html, unsafe_allow_html=True)
+                else:
+                    st.error("Could not extract video ID")
             else:
-                st.error("Video not found")
+                st.warning("Video not available - search failed")
             
             st.markdown("<br>", unsafe_allow_html=True)
 
