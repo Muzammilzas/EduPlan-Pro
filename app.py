@@ -616,8 +616,8 @@ def render_video_section(videos, section_title, section_icon):
         import urllib.parse
         encoded_query = urllib.parse.quote(search_query)
         
-        # Use YouTube search embed - this ALWAYS works and shows relevant videos
-        embed_url = f"https://www.youtube.com/embed?listType=search&list={encoded_query}"
+        # Create YouTube search link
+        youtube_search_link = f"https://www.youtube.com/results?search_query={encoded_query}"
         
         v_title = str(video.get('title', 'Educational Video')).replace('<', '&lt;').replace('>', '&gt;')
         v_channel = str(video.get('channel', 'YouTube')).replace('<', '&lt;').replace('>', '&gt;')
@@ -629,15 +629,35 @@ def render_video_section(videos, section_title, section_icon):
             <div class="vid-title">📺 {v_title}</div>
             <div class="vid-channel">by {v_channel} • {v_duration}</div>
             <div class="vid-desc">📝 {v_desc}</div>
-            <iframe 
-                width="100%" 
-                height="215" 
-                src="{embed_url}" 
-                frameborder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowfullscreen
-                style="border-radius: 8px;">
-            </iframe>
+            <a href="{youtube_search_link}" target="_blank" style="text-decoration: none;">
+                <div style="
+                    width: 100%;
+                    height: 215px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    border-radius: 8px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    transition: transform 0.2s;
+                    color: white;
+                    text-align: center;
+                    padding: 20px;
+                "
+                onmouseover="this.style.transform='scale(1.02)'"
+                onmouseout="this.style.transform='scale(1)'">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="white" style="margin-bottom: 15px;">
+                        <path d="M10 16.5l6-4.5-6-4.5v9zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                    </svg>
+                    <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">
+                        Click to Watch Videos
+                    </div>
+                    <div style="font-size: 13px; opacity: 0.9;">
+                        Opens YouTube search results
+                    </div>
+                </div>
+            </a>
         </div>
         """
     
