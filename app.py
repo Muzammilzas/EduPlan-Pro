@@ -532,34 +532,46 @@ CRITICAL: Output ONLY valid JSON. All URLs must be real working YouTube links fr
         st.error(f"Error generating content: {e}")
         return None, 0
 
-def render_embedded_video(video, index):
-    """Render embedded YouTube video with full details."""
-    video_url = video.get('url', '')
-    video_id = extract_video_id(video_url)
+def render_video_section(videos, section_title, section_icon):
+    """Render a horizontal scrollable section of videos."""
+    if not videos:
+        return
     
-    if video_id:
-        st.markdown(f"""
-            <div class="video-container">
-                <div class="video-title">📺 {video.get('title', 'Educational Video')}</div>
-                <div class="video-channel">by {video.get('channel', 'YouTube')} • {video.get('duration', 'Length varies')}</div>
-                <div class="video-description">📝 {video.get('description', 'Educational content covering key concepts.')}</div>
-                <iframe width="100%" height="225" 
-                src="https://www.youtube.com/embed/{video_id}" 
-                frameborder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowfullscreen
-                style="border-radius: 8px; margin-top: 10px;">
-                </iframe>
-            </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""
-            <div class="video-container">
-                <div class="video-title">⚠️ {video.get('title', 'Video Unavailable')}</div>
-                <div class="video-channel">by {video.get('channel', 'YouTube')}</div>
-                <div class="video-description">Unable to load video. Please check the URL.</div>
-            </div>
-        """, unsafe_allow_html=True)
+    st.markdown(f'<div class="video-section-header">{section_icon} {section_title} ({len(videos)} Videos)</div>', unsafe_allow_html=True)
+    
+    # Build all video cards in a single HTML string
+    video_cards_html = '<div class="video-scroll-container">'
+    
+    for video in videos:
+        video_url = video.get('url', '')
+        video_id = extract_video_id(video_url)
+        
+        if video_id:
+            video_cards_html += f"""
+                <div class="video-container">
+                    <div class="video-title">📺 {video.get('title', 'Educational Video')}</div>
+                    <div class="video-channel">by {video.get('channel', 'YouTube')} • {video.get('duration', 'Length varies')}</div>
+                    <div class="video-description">📝 {video.get('description', 'Educational content covering key concepts.')}</div>
+                    <iframe width="100%" height="225" 
+                    src="https://www.youtube.com/embed/{video_id}" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen
+                    style="border-radius: 8px; margin-top: 10px;">
+                    </iframe>
+                </div>
+            """
+        else:
+            video_cards_html += f"""
+                <div class="video-container">
+                    <div class="video-title">⚠️ {video.get('title', 'Video Unavailable')}</div>
+                    <div class="video-channel">by {video.get('channel', 'YouTube')}</div>
+                    <div class="video-description">Unable to load video. Please check the URL.</div>
+                </div>
+            """
+    
+    video_cards_html += '</div>'
+    st.markdown(video_cards_html, unsafe_allow_html=True)
 
 # --- MAIN APP ---
 st.markdown("""
@@ -726,20 +738,9 @@ else:
             theory_videos = [v for v in videos if v.get('type') == 'Theory']
             experiment_videos = [v for v in videos if v.get('type') == 'Experiment Demo']
             
-            
-            if theory_videos:
-                st.markdown(f'<div class="video-section-header">🧠 Conceptual Learning ({len(theory_videos)} Videos)</div>', unsafe_allow_html=True)
-                st.markdown('<div class="video-scroll-container">', unsafe_allow_html=True)
-                for i, video in enumerate(theory_videos):
-                    render_embedded_video(video, i)
-                st.markdown('</div>', unsafe_allow_html=True)
-            
-            if experiment_videos:
-                st.markdown(f'<div class="video-section-header">🔬 Experiments & Demonstrations ({len(experiment_videos)} Videos)</div>', unsafe_allow_html=True)
-                st.markdown('<div class="video-scroll-container">', unsafe_allow_html=True)
-                for i, video in enumerate(experiment_videos):
-                    render_embedded_video(video, i)
-                st.markdown('</div>', unsafe_allow_html=True)
+            # Render each section with horizontal scroll
+            render_video_section(theory_videos, "Conceptual Learning", "🧠")
+            render_video_section(experiment_videos, "Experiments & Demonstrations", "🔬")
         
         # Experiment Section
         exp = item.get('experiment', {})
