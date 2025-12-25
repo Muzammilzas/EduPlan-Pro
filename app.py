@@ -286,9 +286,16 @@ def get_real_youtube_video(search_query):
         results = videos_search.result()
         if results and 'result' in results and len(results['result']) > 0:
             video = results['result'][0]
-            return video.get('link', None)
+            video_url = video.get('link', None)
+            if video_url:
+                print(f"✅ Found video for '{search_query}': {video_url}")
+                return video_url
+            else:
+                print(f"❌ No link in result for '{search_query}'")
+        else:
+            print(f"❌ No results for '{search_query}'")
     except Exception as e:
-        print(f"YouTube search error: {e}")
+        print(f"❌ YouTube search error for '{search_query}': {e}")
     return None
 
 def extract_video_id(url):
@@ -552,135 +559,39 @@ CRITICAL: Output ONLY valid JSON. Use specific search queries that will find rel
         return None, 0
 
 def render_video_section(videos, section_title, section_icon):
-    """Render a horizontal scrollable section of videos with REAL embedded players."""
+    """Render videos using Streamlit's native video player - much simpler and more reliable!"""
     if not videos:
         return
     
     st.markdown(f'<div class="video-section-header">{section_icon} {section_title} ({len(videos)} Videos)</div>', unsafe_allow_html=True)
     
-    # Build complete HTML with inline styles
-    html_content = """
-    <style>
-        .video-scroll-wrapper {
-            display: flex;
-            overflow-x: scroll !important;
-            overflow-y: hidden;
-            gap: 20px;
-            padding: 20px 0;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-        }
-        .video-scroll-wrapper::-webkit-scrollbar {
-            height: 10px !important;
-            display: block !important;
-        }
-        .video-scroll-wrapper::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        .video-scroll-wrapper::-webkit-scrollbar-thumb {
-            background: #667eea;
-            border-radius: 10px;
-        }
-        .video-scroll-wrapper::-webkit-scrollbar-thumb:hover {
-            background: #764ba2;
-        }
-        .video-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            min-width: 380px;
-            max-width: 380px;
-            flex-shrink: 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border: 1px solid #e2e8f0;
-        }
-        .vid-title {
-            font-weight: 600;
-            font-size: 16px;
-            color: #2d3748;
-            margin-bottom: 8px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-        }
-        .vid-channel {
-            font-size: 13px;
-            color: #718096;
-            margin-bottom: 10px;
-        }
-        .vid-desc {
-            font-size: 13px;
-            color: #4a5568;
-            margin-bottom: 12px;
-            line-height: 1.5;
-            padding: 8px;
-            background: #f7fafc;
-            border-radius: 6px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-        }
-    </style>
-    <div class="video-scroll-wrapper">
-    """
+    # Create columns for horizontal layout
+    cols = st.columns(min(len(videos), 3))  # Max 3 videos per row
     
     for idx, video in enumerate(videos):
-        v_title = str(video.get('title', 'Educational Video')).replace('<', '&lt;').replace('>', '&gt;')
-        v_channel = str(video.get('channel', 'YouTube')).replace('<', '&lt;').replace('>', '&gt;')
-        v_duration = str(video.get('duration', 'Varies')).replace('<', '&lt;').replace('>', '&gt;')
-        v_desc = str(video.get('description', 'Educational content')).replace('<', '&lt;').replace('>', '&gt;')
-        
-        # NEW: Use the real YouTube URL we fetched
-        real_url = video.get('real_url', None)
-        
-        html_content += f"""
-        <div class="video-card">
-            <div class="vid-title">📺 {v_title}</div>
-            <div class="vid-channel">by {v_channel} • {v_duration}</div>
-            <div class="vid-desc">📝 {v_desc}</div>
-        """
-        
-        # NEW: Embed the actual video if we found one
-        if real_url:
-            video_id = extract_video_id(real_url)
-            if video_id:
-                html_content += f"""
-                <iframe
-                    width="340"
-                    height="215"
-                    src="https://www.youtube.com/embed/{video_id}"
-                    frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen
-                    style="border-radius: 8px;"
-                ></iframe>
-                """
+        col_idx = idx % 3
+        with cols[col_idx]:
+            # Video info
+            v_title = video.get('title', 'Educational Video')
+            v_channel = video.get('channel', 'YouTube')
+            v_duration = video.get('duration', 'Varies')
+            v_desc = video.get('description', 'Educational content')
+            
+            st.markdown(f"**📺 {v_title}**")
+            st.caption(f"by {v_channel} • {v_duration}")
+            st.info(v_desc)
+            
+            # Get the real YouTube URL
+            real_url = video.get('real_url', None)
+            
+            if real_url:
+                # Use Streamlit's native video player - it handles YouTube URLs perfectly!
+                st.video(real_url)
             else:
-                html_content += """
-                <div style="width: 340px; height: 215px; background: #f1f1f1; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999;">
-                    Video not available
-                </div>
-                """
-        else:
-            html_content += """
-            <div style="width: 340px; height: 215px; background: #f1f1f1; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999;">
-                Video not found
-            </div>
-            """
-        
-        html_content += """
-        </div>
-        """
-    
-    html_content += "</div>"
-    
-    # Use components.html for better rendering with increased height for scrollbar
-    components.html(html_content, height=420, scrolling=False)
+                st.error("Video not found")
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+
 
 # --- MAIN APP ---
 st.markdown("""
