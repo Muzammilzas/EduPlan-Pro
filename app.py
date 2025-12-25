@@ -400,52 +400,32 @@ Create an engaging activity with:
 - Safety notes (if applicable)
 - Expected outcomes
 
-5. VIDEO RESOURCES - CRITICAL: PROVIDE REAL, EXISTING YOUTUBE VIDEOS ONLY
+5. VIDEO RESOURCES - GENERATE SEARCH QUERIES
 
-⚠️ IMPORTANT: You MUST provide REAL YouTube videos that ACTUALLY EXIST. Do NOT generate fake URLs.
+Instead of specific video URLs, provide search queries that will find relevant videos.
 
-INSTRUCTIONS FOR FINDING REAL VIDEOS:
-1. Think of ACTUAL popular educational videos you know exist on YouTube
-2. Use videos from these VERIFIED channels that you know have content on this topic:
-   - Khan Academy (https://www.youtube.com/@khanacademy)
-   - CrashCourse (https://www.youtube.com/@crashcourse)
-   - TED-Ed (https://www.youtube.com/@TEDEd)
-   - SciShow (https://www.youtube.com/@SciShow)
-   - Veritasium (https://www.youtube.com/@veritasium)
-   - Bozeman Science (https://www.youtube.com/@bozemanscience)
-   - The Organic Chemistry Tutor (https://www.youtube.com/@TheOrganicChemistryTutor)
-   - Professor Dave Explains (https://www.youtube.com/@ProfessorDaveExplains)
-   - Amoeba Sisters (https://www.youtube.com/@AmoebaSisters) - Biology only
-   - National Geographic (https://www.youtube.com/@NatGeo)
-
-3. For {topic}, think of SPECIFIC videos you know these channels have made
-4. Provide the ACTUAL video title and URL
-5. If you're not 100% certain a video exists, use a general topic search URL format
-
-VIDEO REQUIREMENTS:
-- Provide 4-6 videos total
-- 2-3 videos on THEORY/CONCEPTS (Type: "Theory")
-- 2-3 videos on EXPERIMENTS/DEMOS (Type: "Experiment Demo")
-- {video_guide}
-- Each URL must be a real YouTube link: https://www.youtube.com/watch?v=[VIDEO_ID]
-
-For each video provide:
-- title: The ACTUAL video title (be specific and realistic)
-- channel: The channel name from the list above
-- url: Complete YouTube URL (must be real and working)
+For each video resource, provide:
+- title: Descriptive title of what type of video to search for
+- channel: Preferred channel name (Khan Academy, CrashCourse, TED-Ed, SciShow, Veritasium, Bozeman Science, etc.)
+- search_query: Specific search terms for this topic
 - description: What students will learn (2-3 sentences)
 - type: "Theory" or "Experiment Demo"
-- duration: Realistic video length (e.g., "8:45", "12:30", "15:00")
+- duration: Expected video length
 
-EXAMPLE FORMAT (use real videos like these):
+EXAMPLE:
 {{
-            "title": "Introduction to {topic}",
-            "channel": "Khan Academy",
-            "url": "https://www.youtube.com/watch?v=[REAL_VIDEO_ID]",
-            "description": "A comprehensive introduction covering the fundamental concepts.",
-            "type": "Theory",
-            "duration": "10:30"
-        }}
+    "title": "Introduction to {topic}",
+    "channel": "Khan Academy",
+    "search_query": "{topic} Khan Academy",
+    "description": "A comprehensive introduction to the fundamental concepts.",
+    "type": "Theory",
+    "duration": "10:00"
+}}
+
+Provide 4-6 video resources:
+- 2-3 for THEORY/CONCEPTS (Type: "Theory")
+- 2-3 for EXPERIMENTS/DEMOS (Type: "Experiment Demo")
+- {video_guide}
 
 OUTPUT AS VALID JSON:
 {{
@@ -479,57 +459,41 @@ OUTPUT AS VALID JSON:
     }},
     "videos": [
         {{
-            "title": "Real Video Title",
+            "title": "Introduction to {topic}",
             "channel": "Khan Academy",
-            "url": "https://www.youtube.com/watch?v=REAL_ID",
-            "description": "Detailed description of video content...",
+            "search_query": "{topic} Khan Academy introduction",
+            "description": "Comprehensive overview of fundamental concepts and principles.",
             "type": "Theory",
-            "duration": "10:30"
+            "duration": "10:00"
         }},
         {{
-            "title": "Real Video Title",
+            "title": "{topic} Explained",
             "channel": "CrashCourse",
-            "url": "https://www.youtube.com/watch?v=REAL_ID",
-            "description": "What students learn...",
+            "search_query": "{topic} CrashCourse",
+            "description": "Fast-paced explanation with visual aids and examples.",
             "type": "Theory",
             "duration": "12:00"
         }},
         {{
-            "title": "Real Video Title",
-            "channel": "TED-Ed",
-            "url": "https://www.youtube.com/watch?v=REAL_ID",
-            "description": "Visual explanation...",
-            "type": "Theory",
-            "duration": "5:30"
-        }},
-        {{
-            "title": "Real Experiment Video",
+            "title": "{topic} Demonstration",
             "channel": "SciShow",
-            "url": "https://www.youtube.com/watch?v=REAL_ID",
-            "description": "Practical demonstration...",
+            "search_query": "{topic} experiment demonstration",
+            "description": "Practical demonstration showing real-world applications.",
             "type": "Experiment Demo",
-            "duration": "8:45"
+            "duration": "8:00"
         }},
         {{
-            "title": "Real Lab Demo",
+            "title": "Lab Techniques for {topic}",
             "channel": "Bozeman Science",
-            "url": "https://www.youtube.com/watch?v=REAL_ID",
-            "description": "Step-by-step procedure...",
+            "search_query": "{topic} lab procedure Bozeman",
+            "description": "Step-by-step laboratory procedures and safety protocols.",
             "type": "Experiment Demo",
-            "duration": "15:20"
-        }},
-        {{
-            "title": "Additional Resource",
-            "channel": "Veritasium",
-            "url": "https://www.youtube.com/watch?v=REAL_ID",
-            "description": "Real-world application...",
-            "type": "Experiment Demo",
-            "duration": "11:00"
+            "duration": "15:00"
         }}
     ]
 }}
 
-CRITICAL: Output ONLY valid JSON. All URLs must be real working YouTube links from popular educational videos.
+CRITICAL: Output ONLY valid JSON. Use search_query field instead of url field.
 """
     
     try:
@@ -554,6 +518,8 @@ def render_video_section(videos, section_title, section_icon):
     """Render a horizontal scrollable section of videos."""
     if not videos:
         return
+    
+    import urllib.parse
     
     st.markdown(f'<div class="video-section-header">{section_icon} {section_title} ({len(videos)} Videos)</div>', unsafe_allow_html=True)
     
@@ -624,41 +590,68 @@ def render_video_section(videos, section_title, section_icon):
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
         }
+        .search-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 8px;
+            transition: transform 0.2s;
+        }
+        .search-link:hover {
+            transform: translateY(-2px);
+        }
     </style>
     <div class="video-scroll-wrapper">
     """
     
     for idx, video in enumerate(videos):
+        # Get search query or fallback to URL
+        search_query = video.get('search_query', '')
         video_url = video.get('url', '')
-        video_id = extract_video_id(video_url)
         
-        if video_id:
-            v_title = str(video.get('title', 'Educational Video')).replace('<', '&lt;').replace('>', '&gt;')
-            v_channel = str(video.get('channel', 'YouTube')).replace('<', '&lt;').replace('>', '&gt;')
-            v_duration = str(video.get('duration', 'Length varies')).replace('<', '&lt;').replace('>', '&gt;')
-            v_desc = str(video.get('description', 'Educational content')).replace('<', '&lt;').replace('>', '&gt;')
-            
-            html_content += f"""
-            <div class="video-card">
-                <div class="vid-title">📺 {v_title}</div>
-                <div class="vid-channel">by {v_channel} • {v_duration}</div>
-                <div class="vid-desc">📝 {v_desc}</div>
-                <iframe 
-                    width="100%" 
-                    height="215" 
-                    src="https://www.youtube.com/embed/{video_id}" 
-                    frameborder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen
-                    style="border-radius: 8px;">
-                </iframe>
-            </div>
-            """
+        # Create YouTube search URL from search query
+        if search_query:
+            encoded_query = urllib.parse.quote(search_query)
+            youtube_url = f"https://www.youtube.com/results?search_query={encoded_query}"
+        elif video_url:
+            # If URL is provided, extract video ID
+            video_id = extract_video_id(video_url)
+            if video_id:
+                youtube_url = f"https://www.youtube.com/watch?v={video_id}"
+            else:
+                # Fallback to search with title
+                encoded_title = urllib.parse.quote(video.get('title', 'educational video'))
+                youtube_url = f"https://www.youtube.com/results?search_query={encoded_title}"
+        else:
+            # Last resort: search with title
+            encoded_title = urllib.parse.quote(video.get('title', 'educational video'))
+            youtube_url = f"https://www.youtube.com/results?search_query={encoded_title}"
+        
+        v_title = str(video.get('title', 'Educational Video')).replace('<', '&lt;').replace('>', '&gt;')
+        v_channel = str(video.get('channel', 'YouTube')).replace('<', '&lt;').replace('>', '&gt;')
+        v_duration = str(video.get('duration', 'Varies')).replace('<', '&lt;').replace('>', '&gt;')
+        v_desc = str(video.get('description', 'Educational content')).replace('<', '&lt;').replace('>', '&gt;')
+        
+        html_content += f"""
+        <div class="video-card">
+            <div class="vid-title">📺 {v_title}</div>
+            <div class="vid-channel">by {v_channel} • {v_duration}</div>
+            <div class="vid-desc">📝 {v_desc}</div>
+            <a href="{youtube_url}" target="_blank" class="search-link">
+                🔍 Watch on YouTube
+            </a>
+        </div>
+        """
     
     html_content += "</div>"
     
     # Use components.html for better rendering with increased height for scrollbar
-    components.html(html_content, height=420, scrolling=False)
+    components.html(html_content, height=320, scrolling=False)
 
 # --- MAIN APP ---
 st.markdown("""
