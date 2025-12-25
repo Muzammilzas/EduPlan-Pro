@@ -546,11 +546,23 @@ CRITICAL: Output ONLY valid JSON. Use specific search queries that will find rel
         
         # NEW: Fetch real YouTube videos for each search query
         if 'videos' in data:
-            for video in data['videos']:
+            for idx, video in enumerate(data['videos']):
                 search_query = video.get('search_query', '')
                 if search_query:
+                    # Try to get real video from YouTube search
                     real_url = get_real_youtube_video(search_query)
-                    video['real_url'] = real_url  # Add the actual YouTube URL
+                    
+                    if real_url:
+                        video['real_url'] = real_url
+                    else:
+                        # FALLBACK: Construct a YouTube search URL
+                        # This will at least give users a way to find the video
+                        import urllib.parse
+                        encoded_query = urllib.parse.quote(search_query)
+                        # Use a direct YouTube video URL format that might work
+                        # We'll construct a search results URL as absolute fallback
+                        video['real_url'] = f"https://www.youtube.com/results?search_query={encoded_query}"
+                        video['is_search_url'] = True  # Flag to show it's a search link
         
         return data, response.usage.total_tokens
     
