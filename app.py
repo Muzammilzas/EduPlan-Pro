@@ -29,14 +29,14 @@ st.markdown("""
     .topic-card {
         background: white;
         border-radius: 15px;
-        padding: 30px;
+        padding: 35px;
         margin: 30px 0;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         border-left: 5px solid #667eea;
     }
     
     .topic-header {
-        font-size: 28px;
+        font-size: 30px;
         font-weight: 700;
         color: #2d3748;
         margin-bottom: 20px;
@@ -47,15 +47,15 @@ st.markdown("""
     .topic-number {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        width: 50px;
-        height: 50px;
+        width: 55px;
+        height: 55px;
         border-radius: 50%;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        margin-right: 15px;
+        margin-right: 20px;
         font-weight: 700;
-        font-size: 22px;
+        font-size: 24px;
         box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
     }
     
@@ -66,17 +66,17 @@ st.markdown("""
         margin-top: 30px;
         margin-bottom: 15px;
         padding-bottom: 10px;
-        border-bottom: 2px solid #e2e8f0;
+        border-bottom: 3px solid #e2e8f0;
     }
     
     .overview-box {
         background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
         border-left: 4px solid #667eea;
-        padding: 20px;
+        padding: 25px;
         border-radius: 10px;
         margin: 15px 0;
         font-size: 16px;
-        line-height: 1.7;
+        line-height: 1.8;
     }
     
     .objectives-list, .materials-list {
@@ -87,10 +87,10 @@ st.markdown("""
     }
     
     .list-item {
-        padding: 10px 0;
+        padding: 12px 0;
         border-bottom: 1px solid #e2e8f0;
         font-size: 15px;
-        line-height: 1.5;
+        line-height: 1.6;
     }
     
     .list-item:last-child {
@@ -100,10 +100,10 @@ st.markdown("""
     .video-section-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 15px 20px;
+        padding: 15px 25px;
         border-radius: 10px;
-        margin: 25px 0 15px 0;
-        font-size: 18px;
+        margin: 30px 0 20px 0;
+        font-size: 19px;
         font-weight: 600;
     }
     
@@ -111,20 +111,20 @@ st.markdown("""
         background: white;
         border-radius: 12px;
         padding: 20px;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         border: 1px solid #e2e8f0;
     }
     
     .video-title {
         font-weight: 600;
-        font-size: 16px;
+        font-size: 17px;
         color: #2d3748;
         margin-bottom: 8px;
     }
     
     .video-channel {
-        font-size: 13px;
+        font-size: 14px;
         color: #718096;
         margin-bottom: 12px;
     }
@@ -133,7 +133,10 @@ st.markdown("""
         font-size: 14px;
         color: #4a5568;
         margin-bottom: 15px;
-        line-height: 1.5;
+        line-height: 1.6;
+        padding: 10px;
+        background: #f7fafc;
+        border-radius: 6px;
         font-style: italic;
     }
     
@@ -141,12 +144,12 @@ st.markdown("""
         background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
         border: 2px solid #fbbf24;
         border-radius: 12px;
-        padding: 25px;
-        margin: 25px 0;
+        padding: 30px;
+        margin: 30px 0;
     }
     
     .experiment-title {
-        font-size: 22px;
+        font-size: 24px;
         font-weight: 600;
         color: #92400e;
         margin-bottom: 20px;
@@ -154,26 +157,26 @@ st.markdown("""
     
     .step-item {
         background: white;
-        padding: 15px;
+        padding: 18px;
         margin: 12px 0;
         border-radius: 8px;
         border-left: 4px solid #fbbf24;
         font-size: 15px;
-        line-height: 1.6;
+        line-height: 1.7;
     }
     
     .step-number {
         display: inline-block;
         background: #fbbf24;
         color: white;
-        width: 30px;
-        height: 30px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
         text-align: center;
-        line-height: 30px;
+        line-height: 32px;
         margin-right: 12px;
         font-weight: 600;
-        font-size: 14px;
+        font-size: 15px;
     }
     
     div[data-testid="stToolbar"] {visibility: hidden;}
@@ -188,6 +191,10 @@ if 'generated_content' not in st.session_state:
     st.session_state.generated_content = [] 
 if 'toc_text' not in st.session_state:
     st.session_state.toc_text = ""
+if 'subject_name' not in st.session_state:
+    st.session_state.subject_name = ""
+if 'grade_level' not in st.session_state:
+    st.session_state.grade_level = ""
 
 # --- SIDEBAR ---
 with st.sidebar:
@@ -203,11 +210,12 @@ with st.sidebar:
     
     st.divider()
     
-    st.markdown("### 📚 About EduPlan Pro")
-    st.caption("🇺🇸 US School Curriculum")
-    st.caption("📖 Flexible Topic Coverage")
-    st.caption("🎬 Multiple Video Resources")
-    st.caption("⚡ Real-time Generation")
+    st.markdown("### 📚 Features")
+    st.caption("✅ Smart Topic Generation")
+    st.caption("✅ Flexible Chapter Count")
+    st.caption("✅ Multiple Video Resources")
+    st.caption("✅ Embedded Video Players")
+    st.caption("✅ No API Limits")
     
     st.divider()
     
@@ -215,6 +223,8 @@ with st.sidebar:
         st.session_state.topics = []
         st.session_state.generated_content = []
         st.session_state.toc_text = ""
+        st.session_state.subject_name = ""
+        st.session_state.grade_level = ""
         st.rerun()
 
 # --- HELPER FUNCTIONS ---
@@ -226,6 +236,8 @@ def get_openai_client():
 
 def extract_video_id(url):
     """Extract YouTube video ID from various URL formats."""
+    if not url:
+        return None
     patterns = [
         r'(?:v=|\/)([0-9A-Za-z_-]{11}).*',
         r'(?:embed\/)([0-9A-Za-z_-]{11})',
@@ -238,45 +250,57 @@ def extract_video_id(url):
     return None
 
 def get_table_of_contents(client, grade, subject):
-    """Generate FLEXIBLE curriculum topics based on real subject requirements."""
+    """Generate REALISTIC curriculum topics based on actual subject standards."""
+    
     prompt = f"""
-You are a US curriculum expert. Generate a comprehensive Table of Contents for {subject}, Grade {grade}.
+You are a US curriculum expert with deep knowledge of standard textbooks and curriculum frameworks.
 
-IMPORTANT INSTRUCTIONS:
-1. Base the number of topics on the ACTUAL standard curriculum for this subject and grade level
-2. DO NOT limit to exactly 8 topics - use the real number of chapters/units typically taught
-3. Follow US education standards (NGSS for Science, Common Core for Math, NCSS for Social Studies, etc.)
-4. Topics should be:
+TASK: Generate the complete Table of Contents for {subject}, Grade {grade} based on ACTUAL US curriculum standards.
+
+CRITICAL INSTRUCTIONS:
+1. Research what topics are ACTUALLY taught in {subject} for Grade {grade} in US schools
+2. The number of topics should match REAL textbook chapter counts:
+   - Physics: typically 10-14 major topics
+   - Chemistry: typically 10-14 major topics  
+   - Biology: typically 9-12 major topics
+   - Algebra: typically 8-11 units
+   - Geometry: typically 10-12 units
+   - US History: typically 10-15 units
+   - World History: typically 12-16 units
+
+3. Topics must be:
+   - Aligned with NGSS (Science), Common Core (Math), or NCSS (Social Studies)
    - Age-appropriate for Grade {grade}
-   - Aligned with national/state standards
-   - Sequenced logically (foundational concepts first)
-   - Cover the full academic year curriculum
+   - Sequenced in the order they're typically taught
+   - Use proper terminology from standard textbooks
 
-Examples of typical topic counts:
-- Physics Grade 9: Usually 10-12 major topics (Motion, Forces, Energy, Waves, Electricity, Magnetism, etc.)
-- Chemistry Grade 10: Usually 10-14 topics (Atomic Structure, Periodic Table, Chemical Bonds, Reactions, etc.)
-- Biology Grade 9: Usually 8-10 topics (Cell Biology, Genetics, Evolution, Ecology, etc.)
-- Mathematics varies by course (Algebra I might have 8-10 units, Geometry 10-12 units)
+4. Include the FULL CURRICULUM - don't abbreviate or skip topics
 
-Generate the COMPLETE, REALISTIC list of topics for {subject} Grade {grade}.
+EXAMPLES OF REAL CURRICULA:
+- Chemistry Grade 10: Atomic Structure, Periodic Table, Chemical Bonding, Chemical Reactions, Stoichiometry, Gas Laws, Solutions, Acids and Bases, Thermochemistry, Kinetics, Equilibrium, Electrochemistry, Organic Chemistry
+- Physics Grade 9: Motion and Forces, Energy and Work, Momentum, Waves, Sound, Light, Electricity, Magnetism, Heat and Temperature, Simple Machines
 
-Output format STRICTLY (no introduction, no explanation):
+Output format STRICTLY:
 1. Topic Name
 2. Topic Name
 3. Topic Name
-... (continue for all topics in the actual curriculum)
+... (continue for ALL topics in the standard curriculum)
 
-OUTPUT ONLY THE NUMBERED LIST. No extra text.
+OUTPUT ONLY THE NUMBERED LIST. No introduction, no conclusion, no extra text.
 """
+    
     try:
         response = client.chat.completions.create(
             model="gpt-4o",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7
+            messages=[
+                {"role": "system", "content": "You are a US curriculum expert who generates realistic, standards-aligned topic lists."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.6
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
-        st.error(f"Error: {e}")
+        st.error(f"Error generating curriculum: {e}")
         return None
 
 def parse_topics(toc_text):
@@ -298,79 +322,78 @@ def generate_topic_content(client, grade, subject, mode, topic, sequence_num):
         video_guide = "Include formal laboratory demonstrations showing proper equipment usage and safety procedures."
     else:
         exp_context = "HOME/VIRTUAL LEARNING"
-        exp_guide = "Use ONLY safe, common household items (no hazardous chemicals, no sharp objects for young students)."
+        exp_guide = "Use ONLY safe, common household items (no hazardous chemicals, no dangerous equipment)."
         video_guide = "Include DIY demonstrations using household materials that are safe for home experiments."
 
     MASTER_PROMPT = f"""
-You are an expert US curriculum designer creating content for Grade {grade} {subject}.
+You are an expert US curriculum designer creating a comprehensive lesson plan.
 
+Subject: {subject}
+Grade: {grade}
 Topic: {topic}
 Mode: {exp_context}
-Standards: US Education Standards (NGSS/Common Core/NCSS aligned)
 
-Create a comprehensive, professional lesson plan following this structure:
+Create a detailed, professional lesson plan with the following structure:
 
 1. TOPIC OVERVIEW
-Write 4-5 sentences explaining:
+Write 4-5 sentences that explain:
 - What this topic covers
-- Why it's important for Grade {grade} students
-- Real-world applications and relevance
-- How it connects to prior and future learning
+- Why it matters for Grade {grade} students
+- Real-world applications
+- How it connects to other topics
 
 2. LEARNING OBJECTIVES
-List 3-4 specific, measurable objectives using Bloom's Taxonomy action verbs:
-- Students will be able to [understand/analyze/apply/create]...
-- Each objective should be clear and assessable
+List 3-4 specific, measurable objectives:
+- Use action verbs (understand, analyze, calculate, demonstrate, etc.)
+- Make them assessable
+- Align with US standards
 
 3. REQUIRED MATERIALS
-List 6-10 specific materials needed for the hands-on activity.
+List 6-10 specific materials needed.
 {exp_guide}
-Be specific with quantities and specifications where relevant.
+Be precise with quantities and specifications.
 
-4. HANDS-ON EXPERIMENT/ACTIVITY
-Create an engaging, grade-appropriate activity with:
-- Descriptive, engaging title
+4. HANDS-ON ACTIVITY
+Create an engaging activity with:
+- Creative, descriptive title
 - 7-10 detailed, numbered steps
-- Safety considerations (if applicable)
-- Expected outcomes/observations
-- Discussion questions
+- Safety notes (if applicable)
+- Expected outcomes
 
-5. EDUCATIONAL VIDEO RESOURCES
-Provide 4-6 HIGH-QUALITY YouTube videos with REAL, WORKING URLs.
+5. VIDEO RESOURCES - PROVIDE REAL YOUTUBE URLS
+Find 4-6 high-quality educational videos with REAL, WORKING YouTube URLs.
 
-VIDEO SELECTION CRITERIA:
-- Choose videos from VERIFIED educational channels ONLY:
-  * Khan Academy (all subjects)
-  * CrashCourse (Science, History, etc.)
-  * TED-Ed (Various topics)
-  * SciShow (Science)
-  * Veritasium (Physics, Science)
-  * National Geographic (Science, Geography)
-  * Amoeba Sisters (Biology)
-  * Bozeman Science (Biology, Chemistry)
-  * The Organic Chemistry Tutor (Chemistry, Physics, Math)
-  * MIT OpenCourseWare (Advanced topics)
-  * Professor Dave Explains (Science, Math)
+TRUSTED CHANNELS TO USE:
+- Khan Academy
+- CrashCourse
+- TED-Ed
+- SciShow
+- Veritasium
+- National Geographic
+- Amoeba Sisters (Biology)
+- Bozeman Science
+- The Organic Chemistry Tutor
+- Professor Dave Explains
+- MIT OpenCourseWare
 
-VIDEO DISTRIBUTION:
-- 2-3 videos explaining THEORY/CONCEPTS (Type: "Theory")
-- 2-3 videos showing EXPERIMENTS/DEMONSTRATIONS (Type: "Experiment Demo")
+VIDEO REQUIREMENTS:
+- Provide ACTUAL YouTube URLs (https://www.youtube.com/watch?v=...)
+- 2-3 videos on THEORY/CONCEPTS (Type: "Theory")
+- 2-3 videos on EXPERIMENTS/DEMOS (Type: "Experiment Demo")
 {video_guide}
 
 For each video provide:
-- title: Exact title of the video
+- title: Exact video title from YouTube
 - channel: Channel name
-- url: Full working YouTube URL (https://www.youtube.com/watch?v=VIDEO_ID)
-- description: Detailed description of what students will learn (2-3 sentences)
+- url: Complete working YouTube URL
+- description: What students learn (2-3 sentences)
 - type: "Theory" or "Experiment Demo"
-- duration: Approximate video length
-
-CRITICAL: All video URLs MUST be real, working YouTube links from popular educational videos.
+- duration: Estimated length
 
 OUTPUT AS VALID JSON:
 {{
     "title": "{topic}",
-    "overview": "comprehensive 4-5 sentence overview...",
+    "overview": "Comprehensive 4-5 sentence overview...",
     "objectives": [
         "Students will be able to...",
         "Students will be able to...",
@@ -378,82 +401,78 @@ OUTPUT AS VALID JSON:
         "Students will be able to..."
     ],
     "materials": [
-        "Material 1 with specifications",
-        "Material 2 with specifications",
+        "Material 1",
+        "Material 2",
         "Material 3",
         "Material 4",
         "Material 5",
         "Material 6"
     ],
     "experiment": {{
-        "title": "Engaging Experiment/Activity Title",
+        "title": "Activity Title",
         "steps": [
-            "Detailed step 1...",
-            "Detailed step 2...",
-            "Detailed step 3...",
-            "Detailed step 4...",
-            "Detailed step 5...",
-            "Detailed step 6...",
-            "Detailed step 7..."
+            "Step 1...",
+            "Step 2...",
+            "Step 3...",
+            "Step 4...",
+            "Step 5...",
+            "Step 6...",
+            "Step 7..."
         ]
     }},
     "videos": [
         {{
-            "title": "Real Video Title From Channel",
+            "title": "Real Video Title",
             "channel": "Khan Academy",
-            "url": "https://www.youtube.com/watch?v=REAL_VIDEO_ID",
-            "description": "Detailed explanation of what this video teaches and why it's useful...",
+            "url": "https://www.youtube.com/watch?v=REAL_ID",
+            "description": "Detailed description of video content...",
             "type": "Theory",
             "duration": "10:30"
         }},
         {{
             "title": "Real Video Title",
             "channel": "CrashCourse",
-            "url": "https://www.youtube.com/watch?v=REAL_VIDEO_ID",
-            "description": "What students will learn from this video...",
+            "url": "https://www.youtube.com/watch?v=REAL_ID",
+            "description": "What students learn...",
             "type": "Theory",
-            "duration": "12:15"
+            "duration": "12:00"
         }},
         {{
             "title": "Real Video Title",
             "channel": "TED-Ed",
-            "url": "https://www.youtube.com/watch?v=REAL_VIDEO_ID",
-            "description": "Visual explanation of concepts covered...",
+            "url": "https://www.youtube.com/watch?v=REAL_ID",
+            "description": "Visual explanation...",
             "type": "Theory",
-            "duration": "5:45"
+            "duration": "5:30"
         }},
         {{
-            "title": "Real Experiment Video Title",
+            "title": "Real Experiment Video",
             "channel": "SciShow",
-            "url": "https://www.youtube.com/watch?v=REAL_VIDEO_ID",
-            "description": "Demonstration showing practical application...",
+            "url": "https://www.youtube.com/watch?v=REAL_ID",
+            "description": "Practical demonstration...",
             "type": "Experiment Demo",
-            "duration": "8:20"
+            "duration": "8:45"
         }},
         {{
-            "title": "Real Lab Demo Title",
+            "title": "Real Lab Demo",
             "channel": "Bozeman Science",
-            "url": "https://www.youtube.com/watch?v=REAL_VIDEO_ID",
-            "description": "Step-by-step laboratory procedure...",
+            "url": "https://www.youtube.com/watch?v=REAL_ID",
+            "description": "Step-by-step procedure...",
             "type": "Experiment Demo",
-            "duration": "15:30"
+            "duration": "15:20"
         }},
         {{
             "title": "Additional Resource",
             "channel": "Veritasium",
-            "url": "https://www.youtube.com/watch?v=REAL_VIDEO_ID",
-            "description": "Real-world application and extended learning...",
+            "url": "https://www.youtube.com/watch?v=REAL_ID",
+            "description": "Real-world application...",
             "type": "Experiment Demo",
-            "duration": "11:45"
+            "duration": "11:00"
         }}
     ]
 }}
 
-CRITICAL REQUIREMENTS:
-- Output ONLY valid JSON (no markdown, no extra text)
-- All URLs must be real working YouTube links
-- Use well-known, popular educational videos
-- Descriptions should be detailed and helpful for teachers
+CRITICAL: Output ONLY valid JSON. All URLs must be real working YouTube links from popular educational videos.
 """
     
     try:
@@ -461,7 +480,7 @@ CRITICAL REQUIREMENTS:
             model="gpt-4o",
             response_format={"type": "json_object"},
             messages=[
-                {"role": "system", "content": "You are an expert US curriculum designer who creates comprehensive lesson plans with real YouTube educational video resources."},
+                {"role": "system", "content": "You are a US curriculum expert creating detailed lesson plans with real YouTube video resources."},
                 {"role": "user", "content": MASTER_PROMPT}
             ],
             temperature=0.7
@@ -475,7 +494,7 @@ CRITICAL REQUIREMENTS:
         return None, 0
 
 def render_embedded_video(video, index):
-    """Render a professional embedded YouTube video player."""
+    """Render embedded YouTube video with full details."""
     video_url = video.get('url', '')
     video_id = extract_video_id(video_url)
     
@@ -483,15 +502,15 @@ def render_embedded_video(video, index):
         st.markdown(f"""
             <div class="video-container">
                 <div class="video-title">📺 {video.get('title', 'Educational Video')}</div>
-                <div class="video-channel">by {video.get('channel', 'YouTube')} • {video.get('duration', 'Duration varies')}</div>
-                <div class="video-description">{video.get('description', 'Educational content covering key concepts.')}</div>
+                <div class="video-channel">by {video.get('channel', 'YouTube')} • {video.get('duration', 'Length varies')}</div>
+                <div class="video-description">📝 {video.get('description', 'Educational content covering key concepts.')}</div>
             </div>
         """, unsafe_allow_html=True)
         
-        # Embed the video
+        # Embed video
         try:
             st.video(f"https://www.youtube.com/watch?v={video_id}")
-        except:
+        except Exception as e:
             st.markdown(f"""
                 <iframe width="100%" height="400" 
                 src="https://www.youtube.com/embed/{video_id}" 
@@ -503,7 +522,7 @@ def render_embedded_video(video, index):
         
         st.markdown("<br>", unsafe_allow_html=True)
     else:
-        st.warning(f"⚠️ Video not available: {video.get('title', 'Unknown')}")
+        st.warning(f"⚠️ Video unavailable: {video.get('title', 'Unknown')}")
 
 # --- MAIN APP ---
 st.markdown("""
@@ -534,6 +553,9 @@ if not st.session_state.topics:
             if not subject or not grade:
                 st.warning("⚠️ Please enter both Subject and Grade Level")
             else:
+                st.session_state.subject_name = subject
+                st.session_state.grade_level = grade
+                
                 client = get_openai_client()
                 with st.spinner("🧠 Analyzing curriculum standards and generating topics..."):
                     toc = get_table_of_contents(client, grade, subject)
@@ -541,7 +563,159 @@ if not st.session_state.topics:
                         st.session_state.toc_text = toc
                         st.session_state.topics = parse_topics(toc)
                         if st.session_state.topics:
-                            st.success(f"✅ Generated {len(st.session_state.topics)} topics based on standard curriculum!")
+                            st.success(f"✅ Generated {len(st.session_state.topics)} topics!")
                             st.rerun()
                         else:
-                            st.error("Failed to parse topics.
+                            st.error("Failed to parse topics. Please try again.")
+
+# STEP 2: Topic Selection
+elif not st.session_state.generated_content:
+    st.success(f"✅ Generated **{len(st.session_state.topics)} Topics** for {st.session_state.subject_name} - Grade {st.session_state.grade_level}")
+    
+    # Display TOC
+    with st.expander(f"📖 View Complete Curriculum ({len(st.session_state.topics)} Topics)", expanded=True):
+        cols = st.columns(2)
+        mid_point = (len(st.session_state.topics) + 1) // 2
+        
+        with cols[0]:
+            for i, topic in enumerate(st.session_state.topics[:mid_point], 1):
+                st.markdown(f"**{i}.** {topic}")
+        
+        with cols[1]:
+            for i, topic in enumerate(st.session_state.topics[mid_point:], mid_point + 1):
+                st.markdown(f"**{i}.** {topic}")
+    
+    st.markdown("---")
+    st.markdown("### 📝 Step 2: Generate Detailed Lesson Plans")
+    
+    col1, col2 = st.columns([1, 2])
+    
+    with col1:
+        selection_type = st.radio(
+            "Choose Generation Mode:",
+            ["All Topics (Recommended)", "Select Specific Topics"]
+        )
+    
+    selected_topics = []
+    
+    if selection_type == "Select Specific Topics":
+        with col2:
+            chosen = st.multiselect(
+                "Select topics:", 
+                st.session_state.topics,
+                help="Select one or more topics to generate"
+            )
+            selected_topics = [(st.session_state.topics.index(t)+1, t) for t in chosen]
+    else:
+        selected_topics = [(i+1, t) for i, t in enumerate(st.session_state.topics)]
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    if st.button(f"✨ Generate {len(selected_topics)} Lesson Plan(s)", type="primary", use_container_width=True):
+        if not selected_topics:
+            st.warning("⚠️ Please select at least one topic")
+        else:
+            client = get_openai_client()
+            progress_bar = st.progress(0)
+            status = st.empty()
+            
+            for i, (seq, topic_name) in enumerate(selected_topics):
+                status.info(f"⏳ Generating: **{topic_name}** ({i+1}/{len(selected_topics)})")
+                
+                data, tokens = generate_topic_content(
+                    client, 
+                    st.session_state.grade_level, 
+                    st.session_state.subject_name, 
+                    mode, 
+                    topic_name, 
+                    seq
+                )
+                
+                if data:
+                    st.session_state.generated_content.append(data)
+                
+                progress_bar.progress((i + 1) / len(selected_topics))
+            
+            status.success("✅ All lesson plans generated!")
+            st.balloons()
+            st.rerun()
+
+# STEP 3: Display Generated Content
+else:
+    st.success(f"🎉 Complete Curriculum: **{st.session_state.subject_name} - Grade {st.session_state.grade_level}** ({len(st.session_state.generated_content)} Topics)")
+    
+    # Display each topic
+    for idx, item in enumerate(st.session_state.generated_content):
+        
+        st.markdown(f"""
+            <div class="topic-card">
+                <div class="topic-header">
+                    <span class="topic-number">{idx+1}</span>
+                    <span>{item.get('title', 'Untitled Topic')}</span>
+                </div>
+        """, unsafe_allow_html=True)
+        
+        # Overview
+        st.markdown(f"""
+            <div class="overview-box">
+                <strong style="color: #667eea; font-size: 18px;">📖 Overview</strong><br><br>
+                {item.get('overview', 'No overview available')}
+            </div>
+        """, unsafe_allow_html=True)
+        
+        # Two columns: Objectives & Materials
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown('<div class="section-header">🎯 Learning Objectives</div>', unsafe_allow_html=True)
+            st.markdown('<div class="objectives-list">', unsafe_allow_html=True)
+            for obj in item.get('objectives', []):
+                st.markdown(f'<div class="list-item">✓ {obj}</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown('<div class="section-header">🧪 Required Materials</div>', unsafe_allow_html=True)
+            st.markdown('<div class="materials-list">', unsafe_allow_html=True)
+            for mat in item.get('materials', []):
+                st.markdown(f'<div class="list-item">• {mat}</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Videos Section
+        videos = item.get('videos', [])
+        if videos:
+            st.markdown('<div class="section-header">🎬 Educational Video Resources</div>', unsafe_allow_html=True)
+            
+            # Separate by type
+            theory_videos = [v for v in videos if v.get('type') == 'Theory']
+            experiment_videos = [v for v in videos if v.get('type') == 'Experiment Demo']
+            
+            if theory_videos:
+                st.markdown(f'<div class="video-section-header">🧠 Conceptual Learning ({len(theory_videos)} Videos)</div>', unsafe_allow_html=True)
+                for i, video in enumerate(theory_videos):
+                    render_embedded_video(video, i)
+            
+            if experiment_videos:
+                st.markdown(f'<div class="video-section-header">🔬 Experiments & Demonstrations ({len(experiment_videos)} Videos)</div>', unsafe_allow_html=True)
+                for i, video in enumerate(experiment_videos):
+                    render_embedded_video(video, i)
+        
+        # Experiment Section
+        exp = item.get('experiment', {})
+        if exp:
+            st.markdown(f"""
+                <div class="experiment-box">
+                    <div class="experiment-title">⚗️ Hands-On Activity: {exp.get('title', 'Experiment')}</div>
+            """, unsafe_allow_html=True)
+            
+            for i, step in enumerate(exp.get('steps', []), 1):
+                st.markdown(f"""
+                    <div class="step-item">
+                        <span class="step-number">{i}</span>
+                        {step}
+                    </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("<br><br>", unsafe_allow_html=True)
