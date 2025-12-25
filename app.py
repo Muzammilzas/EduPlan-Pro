@@ -13,7 +13,7 @@ st.markdown("""
     .main-header {text-align: center; color: #333;}
     .topic-header {color: #2e86c1; border-bottom: 2px solid #2e86c1; padding-bottom: 10px; margin-top: 30px;}
     .sub-header {font-weight: bold; color: #555; margin-top: 15px;}
-    .video-card {background-color: #f0f2f6; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 10px;}
+    .video-container {background-color: #000; padding: 5px; border-radius: 10px;}
     div[data-testid="stToolbar"] {visibility: hidden;}
     footer {visibility: hidden;}
     </style>
@@ -39,7 +39,7 @@ with st.sidebar:
     else:
         api_key = None
 
-    if st.button("🔄 Reset App"):
+    if st.button("🔄 Reset / Clear App"):
         st.session_state.topics = []
         st.session_state.generated_content = []
         st.session_state.toc_text = ""
@@ -82,17 +82,24 @@ def generate_topic_json(client, grade, subject, mode, topic, sequence_num):
     # Context Logic
     if mode == "Physical (Classroom)":
         exp_context = "PHYSICAL CLASSROOM"
-        exp_guide = "Use standard school science lab equipment. If the topic is purely theoretical (e.g. History dates, Math theory), set 'experiment_possible' to false."
+        exp_guide = "Use standard school science lab equipment. If the topic is purely theoretical, set 'experiment_possible' to false."
     else:
         exp_context = "VIRTUAL/ONLINE CLASS"
         exp_guide = "Use ONLY common household items safe for home use. If the topic is purely theoretical, set 'experiment_possible' to false."
 
-    # UPDATED PROMPT: Forces detailed experiment or explicitly says 'false'
+    # --- UPDATED STRICT PROMPT ---
     MASTER_PROMPT = f"""
-    You are EduPlan Pro.
+    You are EduPlan Pro, a curriculum expert for teachers.
     Subject: {subject} | Grade: {grade} | Topic: {topic} | Mode: {exp_context}
 
-    Instructions: {exp_guide}
+    CRITICAL VIDEO SOURCE RULES:
+    1. Provide EXACT, PLAYABLE YouTube URLs (start with https://www.youtube.com/watch?v=...).
+    2. SOURCES MUST BE ONLY FROM: Khan Academy, CrashCourse, PBS Learning Media, National Geographic, TED-Ed, SciShow, Smithsonian, Amoeba Sisters, BBC Bitesize.
+    3. Do NOT invent links. If a specific video doesn't exist, find the closest matching topic from the allowed channels.
+    4. Video Content: Must be complete, detailed lessons (not shorts).
+    5. NO REPETITION: Do not use the same video link twice.
+
+    Experiment Instructions: {exp_guide}
     
     OUTPUT JSON FORMAT ONLY. Structure:
     {{
@@ -103,22 +110,24 @@ def generate_topic_json(client, grade, subject, mode, topic, sequence_num):
         "experiment_possible": true/false,
         "experiment": {{
             "title": "Name of experiment",
-            "steps": ["Step 1", "Step 2", "Step 3", "Step 4", "Step 5"]
+            "steps": ["Step 1", "Step 2", "Step 3", "Step 4"]
         }},
-        "youtube_queries": ["Search Term 1", "Search Term 2"], 
+        "video_links": [
+            {{"title": "Video Title 1", "url": "https://www.youtube.com/watch?v=..."}},
+            {{"title": "Video Title 2", "url": "https://www.youtube.com/watch?v=..."}}
+        ], 
         "assessment": ["Method 1", "Method 2"]
     }}
-    Note: For 'youtube_queries', provide specific search terms (e.g. 'Pythagoras theorem visual proof') instead of direct links, as links often break.
     """
     
     response = client.chat.completions.create(
         model="gpt-4o",
         response_format={ "type": "json_object" }, 
         messages=[
-            {"role": "system", "content": "You are a helpful curriculum assistant that outputs JSON."},
+            {"role": "system", "content": "You are a curriculum assistant. You only provide real, working YouTube links from official educational channels."},
             {"role": "user", "content": MASTER_PROMPT}
         ],
-        temperature=0.7
+        temperature=0.5 # Lower temperature reduces hallucinations (fake links)
     )
     
     try:
@@ -143,8 +152,10 @@ def convert_json_to_txt(json_list, subject, grade):
             full_text += f"Title: {item.get('experiment', {}).get('title')}\n"
             for step in item.get('experiment', {}).get('steps', []):
                 full_text += f"- {step}\n"
-        else:
-            full_text += "\nEXPERIMENT: Theoretical Topic (No Lab)\n"
+            
+        full_text += "\nVIDEO RESOURCES:\n"
+        for vid in item.get('video_links', []):
+            full_text += f"- {vid.get('title')}: {vid.get('url')}\n"
             
         full_text += "\n" + "-"*50 + "\n\n"
         
@@ -251,12 +262,10 @@ else:
                 else:
                     st.write("No specific materials required.")
             
-            # EXPERIMENT SECTION (Conditional)
+            # EXPERIMENT SECTION
             st.markdown("---")
             if item.get('experiment_possible'):
                 st.markdown(f"### ⚡ Experiment: {item.get('experiment', {}).get('title')}")
-                
-                # Show steps clearly
                 with st.expander("📝 View Experiment Steps", expanded=True):
                     steps = item.get('experiment', {}).get('steps', [])
                     for i, step in enumerate(steps, 1):
@@ -264,26 +273,23 @@ else:
             else:
                 st.warning("📘 **Theoretical Topic:** No physical lab experiment is required for this section.")
 
-            # VIDEO SECTION (Robust Search Links)
-            st.markdown("<div class='sub-header'>🎥 Recommended Video Topics</div>", unsafe_allow_html=True)
-            st.write("Click buttons below to find verified videos on YouTube:")
+            # VIDEO SECTION (PLAYABLE EMBEDS)
+            st.markdown("<div class='sub-header'>🎥 Recommended Videos (Official Sources)</div>", unsafe_allow_html=True)
             
-            v_cols = st.columns(3)
-            queries = item.get('youtube_queries', [])
+            videos = item.get('video_links', [])
+            v_cols = st.columns(2) # Grid layout
             
-            # Limit to 3 video buttons to keep layout clean
-            for v_idx, query in enumerate(queries[:3]):
-                clean_query = query.replace(" ", "+")
-                search_url = f"https://www.youtube.com/results?search_query={clean_query}"
+            for v_idx, vid in enumerate(videos):
+                url = vid.get('url')
+                title = vid.get('title')
                 
-                with v_cols[v_idx % 3]:
-                    st.markdown(f"""
-                        <div class="video-card">
-                            <p style="font-weight:bold; font-size:14px;">📺 {query}</p>
-                            <a href="{search_url}" target="_blank" style="text-decoration:none; color:white; background-color:#FF0000; padding:8px 15px; border-radius:5px;">
-                                ▶ Watch on YouTube
-                            </a>
-                        </div>
-                    """, unsafe_allow_html=True)
+                with v_cols[v_idx % 2]:
+                    if "youtube.com" in url or "youtu.be" in url:
+                        # Streamlit Video Player
+                        st.caption(f"**{title}**")
+                        st.video(url)
+                    else:
+                        # Fallback if link is weird
+                        st.error(f"⚠️ Link unavailable: {title}")
 
             st.markdown("---")
