@@ -195,6 +195,8 @@ if 'subject_name' not in st.session_state:
     st.session_state.subject_name = ""
 if 'grade_level' not in st.session_state:
     st.session_state.grade_level = ""
+if 'learning_mode' not in st.session_state:
+    st.session_state.learning_mode = ""
 
 # --- SIDEBAR ---
 with st.sidebar:
@@ -225,6 +227,7 @@ with st.sidebar:
         st.session_state.toc_text = ""
         st.session_state.subject_name = ""
         st.session_state.grade_level = ""
+        st.session_state.learning_mode = ""
         st.rerun()
 
 # --- HELPER FUNCTIONS ---
@@ -555,6 +558,7 @@ if not st.session_state.topics:
             else:
                 st.session_state.subject_name = subject
                 st.session_state.grade_level = grade
+                st.session_state.learning_mode = mode
                 
                 client = get_openai_client()
                 with st.spinner("🧠 Analyzing curriculum standards and generating topics..."):
@@ -626,7 +630,7 @@ elif not st.session_state.generated_content:
                     client, 
                     st.session_state.grade_level, 
                     st.session_state.subject_name, 
-                    mode, 
+                    st.session_state.learning_mode, 
                     topic_name, 
                     seq
                 )
