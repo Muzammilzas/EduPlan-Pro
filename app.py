@@ -54,7 +54,7 @@ def get_client():
     return OpenAI(api_key=api_key)
 
 def get_table_of_contents(client, grade, subject):
-    # Reduced to 5 topics for the demo to ensure higher quality per topic
+    # Reduced to 5 topics to ensure high quality
     prompt = f"""
     Generate a list of 5 key topics for {subject}, Grade {grade}.
     Output format STRICTLY:
@@ -196,41 +196,57 @@ if st.session_state.generated_content:
     
     # Tabs for each topic
     topic_names = [item['title'] for item in st.session_state.generated_content]
-    tabs = st.tabs(topic_names)
+    if not topic_names:
+        st.error("No content generated. Please try again.")
+    else:
+        tabs = st.tabs(topic_names)
 
-    for i, tab in enumerate(tabs):
-        item = st.session_state.generated_content[i]
-        
-        with tab:
-            st.info(f"**Topic Summary:** {item.get('summary')}")
+        for i, tab in enumerate(tabs):
+            item = st.session_state.generated_content[i]
             
-            # --- SECTION 1: THEORY VIDEOS ---
-            st.markdown("### 🧠 Theory & Concepts")
-            t_cols = st.columns(2)
-            for idx, vid in enumerate(item.get('theory_videos', [])):
-                with t_cols[idx % 2]:
-                    st.markdown(f"**{vid.get('title')}**")
-                    # Smart Embed
-                    if "youtube" in vid.get('url'):
-                        st.video(vid.get('url'))
-                    else:
-                        st.write(f"🔗 [Watch Video]({vid.get('url')})")
+            with tab:
+                st.info(f"**Topic Summary:** {item.get('summary')}")
+                
+                # --- SECTION 1: THEORY VIDEOS ---
+                st.markdown("### 🧠 Theory & Concepts")
+                t_cols = st.columns(2)
+                for idx, vid in enumerate(item.get('theory_videos', [])):
+                    with t_cols[idx % 2]:
+                        st.caption(f"**{vid.get('title')}**")
+                        url = vid.get('url', '')
+                        if "youtube.com" in url or "youtu.be" in url:
+                            st.video(url)
+                        else:
+                            st.write(f"🔗 [Watch Video]({url})")
 
-            # --- SECTION 2: EXPERIMENT VIDEOS ---
-            st.markdown("---")
-            st.markdown(f"### 🧪 Practical Experiments ({mode})")
-            e_cols = st.columns(2)
-            for idx, vid in enumerate(item.get('experiment_videos', [])):
-                with e_cols[idx % 2]:
-                    st.markdown(f"**{vid.get('title')}**")
-                    if "youtube" in vid.get('url'):
-                        st.video(vid.get('url'))
-                    else:
-                        st.write(f"🔗 [Watch Video]({vid.get('url')})")
+                # --- SECTION 2: EXPERIMENT VIDEOS ---
+                st.markdown("---")
+                st.markdown(f"### 🧪 Practical Experiments ({mode})")
+                e_cols = st.columns(2)
+                for idx, vid in enumerate(item.get('experiment_videos', [])):
+                    with e_cols[idx % 2]:
+                        st.caption(f"**{vid.get('title')}**")
+                        url = vid.get('url', '')
+                        if "youtube.com" in url or "youtu.be" in url:
+                            st.video(url)
+                        else:
+                            st.write(f"🔗 [Watch Video]({url})")
 
-            # --- SECTION 3: INSTRUCTIONS (Collapsed) ---
-            st.markdown("---")
-            with st.expander("📝 View Experiment Instructions & Materials"):
-                st.markdown("**Materials Needed:**")
-                for mat in item.get('experiment_guide', {}).get('materials', []):
-                    st.markdown(f"- {
+                # --- SECTION 3: INSTRUCTIONS (Collapsed) ---
+                st.markdown("---")
+                with st.expander("📝 View Experiment Instructions & Materials"):
+                    st.markdown("**Materials Needed:**")
+                    materials = item.get('experiment_guide', {}).get('materials', [])
+                    if materials:
+                        for mat in materials:
+                            st.write(f"- {mat}")
+                    else:
+                        st.write("No specific materials listed.")
+                    
+                    st.markdown("**Step-by-Step:**")
+                    steps = item.get('experiment_guide', {}).get('steps', [])
+                    if steps:
+                        for step in steps:
+                            st.write(f"- {step}")
+                    else:
+                        st.write("No steps available.")
