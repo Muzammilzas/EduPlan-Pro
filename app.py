@@ -3,6 +3,7 @@ import os
 import re
 import json
 from openai import OpenAI
+import requests
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="EduPlan Pro", page_icon="🎓", layout="wide")
@@ -94,82 +95,42 @@ st.markdown("""
         border-bottom: none;
     }
     
-    .video-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 20px;
-        margin: 20px 0;
+    .video-section {
+        margin: 25px 0;
     }
     
-    .video-card {
+    .video-type-header {
+        font-size: 16px;
+        font-weight: 600;
+        color: #667eea;
+        margin-bottom: 15px;
+        padding: 10px;
+        background: #f7fafc;
+        border-radius: 8px;
+    }
+    
+    .video-container {
+        margin-bottom: 20px;
+    }
+    
+    .video-info-box {
         background: white;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        transition: transform 0.2s, box-shadow 0.2s;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 8px;
         border: 1px solid #e2e8f0;
-    }
-    
-    .video-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    
-    .video-thumbnail {
-        position: relative;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        height: 160px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 48px;
-    }
-    
-    .video-info {
-        padding: 15px;
     }
     
     .video-title {
         font-weight: 600;
         font-size: 14px;
         color: #2d3748;
-        margin-bottom: 8px;
-        line-height: 1.4;
-        min-height: 40px;
+        margin-bottom: 5px;
     }
     
     .video-channel {
         font-size: 12px;
         color: #718096;
-        margin-bottom: 8px;
-    }
-    
-    .video-description {
-        font-size: 12px;
-        color: #4a5568;
-        margin-bottom: 12px;
-        line-height: 1.4;
-        min-height: 35px;
-    }
-    
-    .watch-button {
-        display: inline-block;
-        background: #FF0000;
-        color: white;
-        padding: 10px 20px;
-        border-radius: 6px;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 13px;
-        text-align: center;
-        width: 100%;
-        transition: background 0.2s;
-    }
-    
-    .watch-button:hover {
-        background: #CC0000;
-        color: white;
-        text-decoration: none;
     }
     
     .experiment-box {
@@ -227,7 +188,7 @@ if 'toc_text' not in st.session_state:
 with st.sidebar:
     st.header("🔐 Settings")
     
-    api_key_input = st.text_input("Enter OpenAI API Key", type="password", placeholder="sk-...")
+    api_key_input = st.text_input("OpenAI API Key", type="password", placeholder="sk-...")
     if api_key_input:
         openai_api_key = api_key_input.strip()
     elif "OPENAI_API_KEY" in st.secrets:
@@ -238,9 +199,9 @@ with st.sidebar:
     st.divider()
     
     st.markdown("### 📚 About")
-    st.caption("🇺🇸 US School Curriculum Standards")
+    st.caption("🇺🇸 US School Curriculum")
     st.caption("📖 K-12 Grade Levels")
-    st.caption("🎬 Curated Educational Videos")
+    st.caption("🎬 Embedded YouTube Videos")
     
     st.divider()
     
@@ -256,6 +217,19 @@ def get_openai_client():
         st.error("⚠️ Please enter your OpenAI API Key in the sidebar.")
         st.stop()
     return OpenAI(api_key=openai_api_key)
+
+def extract_video_id(url):
+    """Extract YouTube video ID from various URL formats."""
+    patterns = [
+        r'(?:v=|\/)([0-9A-Za-z_-]{11}).*',
+        r'(?:embed\/)([0-9A-Za-z_-]{11})',
+        r'^([0-9A-Za-z_-]{11})$'
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            return match.group(1)
+    return None
 
 def get_table_of_contents(client, grade, subject):
     """Generate curriculum topics aligned with US standards."""
@@ -296,14 +270,13 @@ def parse_topics(toc_text):
     lines = toc_text.split('\n')
     topics = []
     for line in lines:
-        # Remove number and dot
         clean_line = re.sub(r'^\d+\.\s*', '', line).strip()
-        if clean_line and len(clean_line) > 3:  # Ignore very short lines
+        if clean_line and len(clean_line) > 3:
             topics.append(clean_line)
     return topics
 
 def generate_topic_content(client, grade, subject, mode, topic, sequence_num):
-    """Generate comprehensive lesson content with curated video recommendations."""
+    """Generate comprehensive lesson content with actual YouTube video URLs."""
     
     if mode == "Physical (Classroom)":
         exp_context = "PHYSICAL CLASSROOM LAB"
@@ -344,29 +317,34 @@ Create an engaging experiment with:
 - Experiment Title (creative and descriptive)
 - 6-8 detailed, numbered steps that are clear and safe for Grade {grade}
 
-5. RECOMMENDED EDUCATIONAL VIDEOS
-Find 4 HIGH-QUALITY videos from these trusted sources ONLY:
-- Khan Academy
-- CrashCourse
-- TED-Ed
-- SciShow
-- Veritasium
-- National Geographic
-- Amoeba Sisters (for Biology)
-- The Organic Chemistry Tutor (for Chemistry/Physics)
-- Bozeman Science
-- MIT OpenCourseWare
+5. RECOMMENDED YOUTUBE VIDEOS WITH REAL URLs
+Provide 4 REAL, EXISTING YouTube videos with ACTUAL working URLs.
 
-For each video, provide:
-- Exact video title (must be real videos from these channels)
-- Channel name
-- Brief description of what the video covers (1 sentence)
-- Video type: "Theory" or "Experiment Demo"
+IMPORTANT INSTRUCTIONS FOR VIDEOS:
+- You must provide REAL YouTube video URLs (https://www.youtube.com/watch?v=...)
+- These should be actual popular educational videos that exist
+- Choose well-known videos from these trusted channels:
+  * Khan Academy
+  * CrashCourse  
+  * TED-Ed
+  * SciShow
+  * Veritasium
+  * National Geographic
+  * Amoeba Sisters
+  * Bozeman Science
+  * The Organic Chemistry Tutor
 
-Video distribution:
-- 2 videos explaining theory/concepts
-- 2 videos showing experiments/demonstrations
+Video Requirements:
+- 2 videos explaining theory/concepts (Type: "Theory")
+- 2 videos showing experiments/demonstrations (Type: "Experiment Demo")
 {video_guide}
+
+For each video provide:
+- title: Exact video title
+- channel: Channel name
+- url: Full YouTube URL (https://www.youtube.com/watch?v=VIDEO_ID)
+- description: What the video covers (1 sentence)
+- type: Either "Theory" or "Experiment Demo"
 
 OUTPUT AS VALID JSON:
 {{
@@ -397,33 +375,40 @@ OUTPUT AS VALID JSON:
     }},
     "videos": [
         {{
-            "title": "Exact Video Title",
+            "title": "Real Video Title",
             "channel": "Channel Name",
+            "url": "https://www.youtube.com/watch?v=ACTUAL_VIDEO_ID",
             "description": "What this video covers",
             "type": "Theory"
         }},
         {{
-            "title": "Exact Video Title",
-            "channel": "Channel Name", 
+            "title": "Real Video Title",
+            "channel": "Channel Name",
+            "url": "https://www.youtube.com/watch?v=ACTUAL_VIDEO_ID",
             "description": "What this video covers",
             "type": "Theory"
         }},
         {{
-            "title": "Exact Video Title",
+            "title": "Real Video Title",
             "channel": "Channel Name",
-            "description": "What this video covers", 
+            "url": "https://www.youtube.com/watch?v=ACTUAL_VIDEO_ID",
+            "description": "What this video covers",
             "type": "Experiment Demo"
         }},
         {{
-            "title": "Exact Video Title",
+            "title": "Real Video Title",
             "channel": "Channel Name",
+            "url": "https://www.youtube.com/watch?v=ACTUAL_VIDEO_ID",
             "description": "What this video covers",
             "type": "Experiment Demo"
         }}
     ]
 }}
 
-CRITICAL: Output ONLY valid JSON. No markdown, no explanation, just the JSON object.
+CRITICAL: 
+- Output ONLY valid JSON
+- All video URLs must be real working YouTube links
+- Use popular educational videos that actually exist
 """
     
     try:
@@ -431,7 +416,7 @@ CRITICAL: Output ONLY valid JSON. No markdown, no explanation, just the JSON obj
             model="gpt-4o",
             response_format={"type": "json_object"},
             messages=[
-                {"role": "system", "content": "You are a US curriculum expert who outputs structured JSON lesson plans."},
+                {"role": "system", "content": "You are a US curriculum expert who outputs structured JSON lesson plans with real YouTube video URLs."},
                 {"role": "user", "content": MASTER_PROMPT}
             ],
             temperature=0.7
@@ -444,29 +429,39 @@ CRITICAL: Output ONLY valid JSON. No markdown, no explanation, just the JSON obj
         st.error(f"Error generating content: {e}")
         return None, 0
 
-def render_video_card(video, index):
-    """Render a modern video card with YouTube search link - NO API NEEDED."""
-    # Create search query from channel + title
-    search_query = f"{video.get('channel', '')} {video.get('title', '')}".replace(' ', '+')
-    youtube_search_url = f"https://www.youtube.com/results?search_query={search_query}"
+def render_embedded_video(video):
+    """Render an embedded YouTube video player."""
+    video_url = video.get('url', '')
+    video_id = extract_video_id(video_url)
     
-    video_type_emoji = "🧠" if video.get('type') == 'Theory' else "🔬"
-    
-    st.markdown(f"""
-        <div class="video-card">
-            <div class="video-thumbnail">
-                <div style="color: white; font-size: 48px;">{video_type_emoji}</div>
+    if video_id:
+        # Display video info
+        st.markdown(f"""
+            <div class="video-info-box">
+                <div class="video-title">📺 {video.get('title', 'Educational Video')}</div>
+                <div class="video-channel">by {video.get('channel', 'YouTube')}</div>
             </div>
-            <div class="video-info">
-                <div class="video-title">{video.get('title', 'Educational Video')}</div>
-                <div class="video-channel">📺 {video.get('channel', 'YouTube')}</div>
-                <div class="video-description">{video.get('description', 'Educational content')}</div>
-                <a href="{youtube_search_url}" target="_blank" class="watch-button">
-                    ▶ Watch on YouTube
-                </a>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+        
+        # Embed the video using st.video or iframe
+        try:
+            # Method 1: Using Streamlit's built-in video player
+            st.video(f"https://www.youtube.com/watch?v={video_id}")
+        except:
+            # Method 2: Fallback to iframe
+            st.markdown(f"""
+                <iframe width="100%" height="315" 
+                src="https://www.youtube.com/embed/{video_id}" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen>
+                </iframe>
+            """, unsafe_allow_html=True)
+        
+        st.caption(f"📝 {video.get('description', '')}")
+        st.markdown("---")
+    else:
+        st.warning(f"⚠️ Could not load video: {video.get('title', 'Unknown')}")
 
 # --- MAIN APP ---
 st.markdown("""
@@ -568,7 +563,7 @@ elif not st.session_state.generated_content:
 else:
     st.success(f"🎉 Complete Curriculum Ready for **{subject} - Grade {grade}**")
     
-    # Display each topic as a beautiful card
+    # Display each topic
     for idx, item in enumerate(st.session_state.generated_content):
         
         st.markdown(f"""
@@ -604,8 +599,8 @@ else:
                 st.markdown(f'<div class="list-item">• {mat}</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
         
-        # Videos Section
-        st.markdown('<div class="section-header">🎬 Recommended Educational Videos</div>', unsafe_allow_html=True)
+        # Videos Section - EMBEDDED PLAYERS
+        st.markdown('<div class="section-header">🎬 Educational Videos</div>', unsafe_allow_html=True)
         
         videos = item.get('videos', [])
         if videos:
@@ -614,23 +609,14 @@ else:
             experiment_videos = [v for v in videos if v.get('type') == 'Experiment Demo']
             
             if theory_videos:
-                st.markdown("**🧠 Conceptual Learning Videos**")
-                st.markdown('<div class="video-grid">', unsafe_allow_html=True)
-                cols = st.columns(len(theory_videos))
-                for i, video in enumerate(theory_videos):
-                    with cols[i]:
-                        render_video_card(video, i)
-                st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown('<div class="video-type-header">🧠 Conceptual Learning Videos</div>', unsafe_allow_html=True)
+                for video in theory_videos:
+                    render_embedded_video(video)
             
             if experiment_videos:
-                st.markdown("<br>", unsafe_allow_html=True)
-                st.markdown("**🔬 Experiment & Demonstration Videos**")
-                st.markdown('<div class="video-grid">', unsafe_allow_html=True)
-                cols = st.columns(len(experiment_videos))
-                for i, video in enumerate(experiment_videos):
-                    with cols[i]:
-                        render_video_card(video, i)
-                st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown('<div class="video-type-header">🔬 Experiment & Demonstration Videos</div>', unsafe_allow_html=True)
+                for video in experiment_videos:
+                    render_embedded_video(video)
         
         # Experiment Section
         exp = item.get('experiment', {})
