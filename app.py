@@ -760,10 +760,11 @@ else:
         """, unsafe_allow_html=True)
         
         # Overview
+        overview_text = str(item.get('overview', 'No overview available')).replace('<', '&lt;').replace('>', '&gt;')
         st.markdown(f"""
             <div class="overview-box">
                 <strong style="color: #667eea; font-size: 18px;">📖 Overview</strong><br><br>
-                {item.get('overview', 'No overview available')}
+                <span style="color: #2d3748;">{overview_text}</span>
             </div>
         """, unsafe_allow_html=True)
         
@@ -774,14 +775,16 @@ else:
             st.markdown('<div class="section-header">🎯 Learning Objectives</div>', unsafe_allow_html=True)
             st.markdown('<div class="objectives-list">', unsafe_allow_html=True)
             for obj in item.get('objectives', []):
-                st.markdown(f'<div class="list-item">✓ {obj}</div>', unsafe_allow_html=True)
+                obj_text = str(obj).replace('<', '&lt;').replace('>', '&gt;')
+                st.markdown(f'<div class="list-item"><span style="color: #2d3748;">✓ {obj_text}</span></div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
         
         with col2:
             st.markdown('<div class="section-header">🧪 Required Materials</div>', unsafe_allow_html=True)
             st.markdown('<div class="materials-list">', unsafe_allow_html=True)
             for mat in item.get('materials', []):
-                st.markdown(f'<div class="list-item">• {mat}</div>', unsafe_allow_html=True)
+                mat_text = str(mat).replace('<', '&lt;').replace('>', '&gt;')
+                st.markdown(f'<div class="list-item"><span style="color: #2d3748;">• {mat_text}</span></div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
         
         # Videos Section
@@ -806,10 +809,12 @@ else:
             """, unsafe_allow_html=True)
             
             for i, step in enumerate(exp.get('steps', []), 1):
+                # Escape HTML characters to prevent rendering issues
+                step_text = str(step).replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
                 st.markdown(f"""
                     <div class="step-item">
                         <span class="step-number">{i}</span>
-                        {step}
+                        <span style="color: #2d3748;">{step_text}</span>
                     </div>
                 """, unsafe_allow_html=True)
             
