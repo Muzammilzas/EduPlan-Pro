@@ -6,12 +6,13 @@ from openai import OpenAI
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="EduPlan Pro", page_icon="🎓", layout="wide")
 
-# --- CSS STYLING ---
+# --- CSS STYLING (To make it look pro) ---
 st.markdown("""
     <style>
     .stTextArea textarea {font-size: 14px;}
     div[data-testid="stToolbar"] {visibility: hidden;}
     footer {visibility: hidden;}
+    .main-header {text-align: center; color: #333;}
     </style>
 """, unsafe_allow_html=True)
 
@@ -23,40 +24,39 @@ if 'generated_plan' not in st.session_state:
 if 'toc_text' not in st.session_state:
     st.session_state.toc_text = ""
 
-# --- SIDEBAR: SETTINGS ---
+# --- SIDEBAR: API KEY ONLY ---
 with st.sidebar:
-    st.title("⚙️ Configuration")
+    st.header("🔐 Settings")
+    st.info("Your API Key is not saved in code. It is only used for this session.")
     
-    # Secure API Key Handling
-    api_key = st.text_input("OpenAI API Key", type="password", placeholder="sk-proj")
+    # Secure API Key Input
+    api_key_input = st.text_input("Enter OpenAI API Key", type="password", placeholder="sk-...")
     
-    # Try to load from secrets if input is empty
-    if not api_key and "OPENAI_API_KEY" in st.secrets:
+    # 1. Use input key if provided
+    if api_key_input:
+        api_key = api_key_input.strip() # Remove accidental spaces
+    # 2. Fallback to secrets (for local dev)
+    elif "OPENAI_API_KEY" in st.secrets:
         api_key = st.secrets["OPENAI_API_KEY"]
+    else:
+        api_key = None
 
-    st.divider()
-    
-    # Inputs
-    subject = st.text_input("Subject", placeholder="e.g. Physics")
-    grade = st.selectbox("Grade Level", [f"Grade {i}" for i in range(1, 13)] + ["University"])
-    mode = st.radio("Learning Mode", ["Physical", "Online"])
-    
-    st.divider()
-    if st.button("🔄 Reset App"):
+    if st.button("🔄 Reset / Clear App"):
         st.session_state.topics = []
         st.session_state.generated_plan = ""
+        st.session_state.toc_text = ""
         st.rerun()
 
 # --- HELPER FUNCTIONS ---
 def get_client():
     if not api_key:
-        st.error("Please enter your OpenAI API Key in the sidebar.")
+        st.error("⚠️ Please enter your OpenAI API Key in the sidebar to proceed.")
         st.stop()
     return OpenAI(api_key=api_key)
 
 def get_table_of_contents(client, grade, subject):
     prompt = f"""
-    Generate a numbered Table of Contents (exactly 8 topics) for {subject}, {grade}.
+    Generate a numbered Table of Contents (exactly 8 topics) for {subject}, Grade/Class: {grade}.
     Output format STRICTLY:
     1. Topic Name
     2. Topic Name
@@ -83,7 +83,7 @@ def parse_topics(toc_text):
 
 def generate_topic_content(client, grade, subject, mode, topic, sequence_num):
     # Context Logic
-    if mode.lower() == "physical":
+    if mode == "Physical (Classroom)":
         exp_type = "LABORATORY EXPERIMENT"
         exp_context = "PHYSICAL CLASSROOM"
         exp_guide = "Use standard school science lab equipment."
@@ -96,6 +96,7 @@ def generate_topic_content(client, grade, subject, mode, topic, sequence_num):
     You are EduPlan Pro.
     Target Audience: Teachers.
     Subject: {subject}
+    Grade Level: {grade}
     Topic: {topic}
     Mode: {exp_context}
 
@@ -126,17 +127,40 @@ def generate_topic_content(client, grade, subject, mode, topic, sequence_num):
     return response.choices[0].message.content, response.usage.total_tokens
 
 # --- MAIN APP LAYOUT ---
-st.title("🎓 EduPlan Pro: AI Curriculum Generator")
-st.markdown(f"**Generating Plan for:** `{subject}` | `{grade}` | Mode: `{mode}`")
+
+st.title("🎓 EduPlan Pro")
+st.markdown("### AI Curriculum & Lesson Planner")
+st.markdown("---")
+
+# --- CENTER INPUTS (Main Interface) ---
+# Using columns to put inputs side-by-side
+col1, col2, col3 = st.columns([2, 1, 1])
+
+with col1:
+    subject = st.text_input("Enter Subject", placeholder="e.g. Physics, History, Math")
+
+with col2:
+    # CHANGED: Now a manual text entry
+    grade = st.text_input("Grade / Class Level", placeholder="e.g. 8, A-Level, Year 10")
+
+with col3:
+    mode = st.radio("Learning Mode", ["Physical (Classroom)", "Online (Virtual)"])
+
+st.markdown("---")
 
 # SECTION 1: Generate Topics
 if not st.session_state.topics:
-    if st.button("🚀 Generate Table of Contents", type="primary"):
-        if not subject:
-            st.warning("Please enter a subject first.")
+    # Center the button
+    col_centered = st.columns([1, 2, 1])
+    with col_centered[1]:
+        generate_btn = st.button("🚀 Generate Table of Contents", type="primary", use_container_width=True)
+
+    if generate_btn:
+        if not subject or not grade:
+            st.warning("⚠️ Please fill in both Subject and Grade Level.")
         else:
-            client = get_client()
-            with st.spinner("Brainstorming topics..."):
+            client = get_client()  # This checks API key
+            with st.spinner(f"🤖 Brainstorming topics for {subject} ({grade})..."):
                 toc = get_table_of_contents(client, grade, subject)
                 if toc:
                     st.session_state.toc_text = toc
@@ -145,26 +169,31 @@ if not st.session_state.topics:
 
 # SECTION 2: Select & Generate Content
 else:
-    st.subheader("Step 2: Select Topics")
+    st.success(f"✅ Topics Found for **{subject} - {grade}**")
     
-    # Display the TOC
-    st.info("Here are the suggested topics:")
-    st.text(st.session_state.toc_text)
+    # Show Topics in an Expander (Collapsible)
+    with st.expander("📂 View Topic List", expanded=True):
+        st.text(st.session_state.toc_text)
+    
+    st.subheader("Step 2: Generate Full Plan")
     
     # Selection Logic
-    selection_mode = st.radio("Selection Type:", ["Generate ALL Topics", "Select Single Topic"], horizontal=True)
+    col_sel1, col_sel2 = st.columns([1, 2])
+    with col_sel1:
+        selection_mode = st.radio("Selection Type:", ["Generate ALL Topics", "Select Single Topic"])
     
     selected_topics = []
     if selection_mode == "Select Single Topic":
-        chosen_topic = st.selectbox("Choose a topic:", st.session_state.topics)
-        # Find index for correct numbering
-        idx = st.session_state.topics.index(chosen_topic) + 1
-        selected_topics = [(idx, chosen_topic)]
+        with col_sel2:
+            chosen_topic = st.selectbox("Choose a topic to generate:", st.session_state.topics)
+            # Find index for correct numbering
+            idx = st.session_state.topics.index(chosen_topic) + 1
+            selected_topics = [(idx, chosen_topic)]
     else:
         selected_topics = [(i+1, t) for i, t in enumerate(st.session_state.topics)]
 
     # Generate Button
-    if st.button(f"✨ Generate Curriculum ({len(selected_topics)} topics)", type="primary"):
+    if st.button(f"✨ Generate Content for {len(selected_topics)} Topic(s)", type="primary"):
         client = get_client()
         full_content = f"CURRICULUM PLAN: {subject.upper()} ({grade})\nMODE: {mode.upper()}\n" + "="*50 + "\n\n"
         
@@ -173,11 +202,16 @@ else:
         total_tokens = 0
         
         for i, (seq, topic_name) in enumerate(selected_topics):
-            with st.spinner(f"Writing content for: {topic_name}..."):
-                content, tokens = generate_topic_content(client, grade, subject, mode, topic_name, seq)
-                full_content += content + "\n\n"
-                total_tokens += tokens
-                progress_bar.progress((i + 1) / total_steps)
+            status_text = f"Writing content for Topic {seq}: {topic_name}..."
+            # Create a placeholder to show current status text
+            status_placeholder = st.empty()
+            status_placeholder.text(status_text)
+            
+            content, tokens = generate_topic_content(client, grade, subject, mode, topic_name, seq)
+            full_content += content + "\n\n"
+            total_tokens += tokens
+            progress_bar.progress((i + 1) / total_steps)
+            status_placeholder.empty() # Clear text
         
         # Add usage report
         full_content += f"\n💰 TOKEN USAGE: {total_tokens}"
@@ -187,15 +221,14 @@ else:
 # SECTION 3: Results & Download
 if st.session_state.generated_plan:
     st.divider()
-    st.subheader("📄 Generated Curriculum")
+    st.subheader("📄 Final Curriculum Plan")
     
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        st.text_area("Preview", st.session_state.generated_plan, height=500)
-    with col2:
-        st.download_button(
-            label="📥 Download .txt File",
-            data=st.session_state.generated_plan,
-            file_name=f"Curriculum_{subject}_{grade}.txt",
-            mime="text/plain"
-        )
+    st.download_button(
+        label="📥 Download Plan (.txt)",
+        data=st.session_state.generated_plan,
+        file_name=f"Curriculum_{subject}_{grade}.txt",
+        mime="text/plain",
+        type="primary"
+    )
+
+    st.text_area("Preview:", st.session_state.generated_plan, height=600)
