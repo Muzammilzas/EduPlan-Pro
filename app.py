@@ -54,6 +54,12 @@ if 'generated_content' not in st.session_state:
     st.session_state.generated_content = [] 
 if 'toc_text' not in st.session_state:
     st.session_state.toc_text = ""
+if 'mode' not in st.session_state:
+    st.session_state.mode = "Physical (Classroom)"
+if 'subject' not in st.session_state:
+    st.session_state.subject = ""
+if 'grade' not in st.session_state:
+    st.session_state.grade = ""
 
 # --- SIDEBAR: SETTINGS ---
 with st.sidebar:
@@ -73,6 +79,9 @@ with st.sidebar:
         st.session_state.topics = []
         st.session_state.generated_content = []
         st.session_state.toc_text = ""
+        st.session_state.subject = ""
+        st.session_state.grade = ""
+        st.session_state.mode = "Physical (Classroom)"
         st.rerun()
 
 # --- HELPER FUNCTIONS ---
@@ -180,11 +189,14 @@ st.markdown("---")
 # 1. LANDING INPUTS
 c1, c2, c3 = st.columns([2, 1, 1])
 with c1:
-    subject = st.text_input("Subject", placeholder="e.g. Physics")
+    subject = st.text_input("Subject", placeholder="e.g. Physics", value=st.session_state.subject)
+    st.session_state.subject = subject
 with c2:
-    grade = st.text_input("Grade Level", placeholder="e.g. 8")
+    grade = st.text_input("Grade Level", placeholder="e.g. 8", value=st.session_state.grade)
+    st.session_state.grade = grade
 with c3:
-    mode = st.radio("Mode", ["Physical (Classroom)", "Online (Virtual)"])
+    mode = st.radio("Mode", ["Physical (Classroom)", "Online (Virtual)"], index=0 if st.session_state.mode == "Physical (Classroom)" else 1)
+    st.session_state.mode = mode
 
 st.markdown("---")
 
@@ -287,7 +299,7 @@ else:
                 st.error("Video not found.")
 
         with v_col2:
-            st.markdown(f'<p class="video-label">⚡ PRACTICAL DEMO ({mode})</p>', unsafe_allow_html=True)
+            st.markdown(f'<p class="video-label">⚡ PRACTICAL DEMO ({st.session_state.mode})</p>', unsafe_allow_html=True)
             if item.get('experiment_video_url'):
                 st.video(item['experiment_video_url'])
             else:
