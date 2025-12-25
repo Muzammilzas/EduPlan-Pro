@@ -11,7 +11,9 @@ st.set_page_config(page_title="EduPlan Pro", page_icon="🎓", layout="wide")
 st.markdown("""
     <style>
     .main-header {text-align: center; color: #333;}
-    .topic-card {background-color: #f9f9f9; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ddd;}
+    .topic-header {color: #2e86c1; border-bottom: 2px solid #2e86c1; padding-bottom: 10px; margin-top: 30px;}
+    .sub-header {font-weight: bold; color: #555; margin-top: 15px;}
+    .video-card {background-color: #f0f2f6; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 10px;}
     div[data-testid="stToolbar"] {visibility: hidden;}
     footer {visibility: hidden;}
     </style>
@@ -21,7 +23,7 @@ st.markdown("""
 if 'topics' not in st.session_state:
     st.session_state.topics = []
 if 'generated_content' not in st.session_state:
-    st.session_state.generated_content = [] # Storing list of JSON objects now
+    st.session_state.generated_content = [] 
 if 'toc_text' not in st.session_state:
     st.session_state.toc_text = ""
 
@@ -80,12 +82,12 @@ def generate_topic_json(client, grade, subject, mode, topic, sequence_num):
     # Context Logic
     if mode == "Physical (Classroom)":
         exp_context = "PHYSICAL CLASSROOM"
-        exp_guide = "Use standard school science lab equipment."
+        exp_guide = "Use standard school science lab equipment. If the topic is purely theoretical (e.g. History dates, Math theory), set 'experiment_possible' to false."
     else:
         exp_context = "VIRTUAL/ONLINE CLASS"
-        exp_guide = "Use ONLY common household items safe for home use."
+        exp_guide = "Use ONLY common household items safe for home use. If the topic is purely theoretical, set 'experiment_possible' to false."
 
-    # UPDATED PROMPT TO RETURN JSON
+    # UPDATED PROMPT: Forces detailed experiment or explicitly says 'false'
     MASTER_PROMPT = f"""
     You are EduPlan Pro.
     Subject: {subject} | Grade: {grade} | Topic: {topic} | Mode: {exp_context}
@@ -95,21 +97,23 @@ def generate_topic_json(client, grade, subject, mode, topic, sequence_num):
     OUTPUT JSON FORMAT ONLY. Structure:
     {{
         "title": "{topic}",
-        "overview": "Brief explanation of core concepts.",
+        "overview": "Brief explanation of core concepts (2-3 sentences).",
         "objectives": ["Goal 1", "Goal 2", "Goal 3"],
         "materials": ["Item 1", "Item 2"],
+        "experiment_possible": true/false,
         "experiment": {{
             "title": "Name of experiment",
-            "steps": ["Step 1", "Step 2", "Step 3"]
+            "steps": ["Step 1", "Step 2", "Step 3", "Step 4", "Step 5"]
         }},
-        "youtube_links": ["Full URL 1", "Full URL 2"],
+        "youtube_queries": ["Search Term 1", "Search Term 2"], 
         "assessment": ["Method 1", "Method 2"]
     }}
+    Note: For 'youtube_queries', provide specific search terms (e.g. 'Pythagoras theorem visual proof') instead of direct links, as links often break.
     """
     
     response = client.chat.completions.create(
         model="gpt-4o",
-        response_format={ "type": "json_object" }, # This forces clean JSON
+        response_format={ "type": "json_object" }, 
         messages=[
             {"role": "system", "content": "You are a helpful curriculum assistant that outputs JSON."},
             {"role": "user", "content": MASTER_PROMPT}
@@ -124,7 +128,6 @@ def generate_topic_json(client, grade, subject, mode, topic, sequence_num):
         return None, 0
 
 def convert_json_to_txt(json_list, subject, grade):
-    # Helper to make the Downloadable file look like a normal document
     full_text = f"CURRICULUM PLAN: {subject} ({grade})\n" + "="*50 + "\n\n"
     
     for item in json_list:
@@ -134,15 +137,14 @@ def convert_json_to_txt(json_list, subject, grade):
         full_text += "LEARNING OBJECTIVES:\n"
         for obj in item.get('objectives', []):
             full_text += f"- {obj}\n"
-            
-        full_text += "\nEXPERIMENT:\n"
-        full_text += f"Title: {item.get('experiment', {}).get('title')}\n"
-        for step in item.get('experiment', {}).get('steps', []):
-            full_text += f"- {step}\n"
-            
-        full_text += "\nVIDEO RESOURCES:\n"
-        for vid in item.get('youtube_links', []):
-            full_text += f"- {vid}\n"
+        
+        if item.get('experiment_possible'):
+            full_text += "\nEXPERIMENT:\n"
+            full_text += f"Title: {item.get('experiment', {}).get('title')}\n"
+            for step in item.get('experiment', {}).get('steps', []):
+                full_text += f"- {step}\n"
+        else:
+            full_text += "\nEXPERIMENT: Theoretical Topic (No Lab)\n"
             
         full_text += "\n" + "-"*50 + "\n\n"
         
@@ -212,11 +214,11 @@ elif not st.session_state.generated_content:
         
         st.rerun()
 
-# SECTION 3: DISPLAY RESULTS (The New Interface)
+# SECTION 3: DISPLAY RESULTS
 else:
     st.success("✅ Curriculum Generated Successfully!")
     
-    # 1. DOWNLOAD BUTTON (Top Right)
+    # DOWNLOAD
     txt_data = convert_json_to_txt(st.session_state.generated_content, subject, grade)
     st.download_button(
         "📥 Download Full Plan (.txt)",
@@ -227,44 +229,61 @@ else:
     
     st.divider()
 
-    # 2. RICH UI DISPLAY
+    # RICH UI DISPLAY
     for idx, item in enumerate(st.session_state.generated_content):
-        # Create a container for each topic
         with st.container():
-            st.markdown(f"## 📌 Topic {idx+1}: {item.get('title')}")
+            st.markdown(f"<h2 class='topic-header'>📌 Topic {idx+1}: {item.get('title')}</h2>", unsafe_allow_html=True)
             
-            # Overview Box
+            # Overview
             st.info(f"**Overview:** {item.get('overview')}")
             
-            # Two Columns: Objectives & Materials
+            # Objectives & Materials
             c1, c2 = st.columns(2)
             with c1:
-                st.markdown("### 🎯 Learning Objectives")
+                st.markdown("<div class='sub-header'>🎯 Learning Objectives</div>", unsafe_allow_html=True)
                 for obj in item.get('objectives', []):
-                    st.markdown(f"- {obj}")
+                    st.write(f"• {obj}")
             with c2:
-                st.markdown("### 🧪 Required Materials")
-                for mat in item.get('materials', []):
-                    st.markdown(f"- {mat}")
+                st.markdown("<div class='sub-header'>🧪 Required Materials</div>", unsafe_allow_html=True)
+                if item.get('materials'):
+                    for mat in item.get('materials', []):
+                        st.write(f"• {mat}")
+                else:
+                    st.write("No specific materials required.")
             
-            # Experiment Section (Styled Box)
+            # EXPERIMENT SECTION (Conditional)
             st.markdown("---")
-            st.markdown(f"### ⚡ Experiment: {item.get('experiment', {}).get('title')}")
-            with st.expander("View Step-by-Step Instructions", expanded=True):
-                for step in item.get('experiment', {}).get('steps', []):
-                    st.write(f"1. {step}")
+            if item.get('experiment_possible'):
+                st.markdown(f"### ⚡ Experiment: {item.get('experiment', {}).get('title')}")
+                
+                # Show steps clearly
+                with st.expander("📝 View Experiment Steps", expanded=True):
+                    steps = item.get('experiment', {}).get('steps', [])
+                    for i, step in enumerate(steps, 1):
+                        st.write(f"**{i}.** {step}")
+            else:
+                st.warning("📘 **Theoretical Topic:** No physical lab experiment is required for this section.")
 
-            # Videos Section (Real Embeds)
-            st.markdown("### 🎥 Recommended Videos")
-            v_cols = st.columns(2) # Grid for videos
-            links = item.get('youtube_links', [])
+            # VIDEO SECTION (Robust Search Links)
+            st.markdown("<div class='sub-header'>🎥 Recommended Video Topics</div>", unsafe_allow_html=True)
+            st.write("Click buttons below to find verified videos on YouTube:")
             
-            for v_idx, link in enumerate(links):
-                # Put videos in columns (zig-zag)
-                with v_cols[v_idx % 2]:
-                    if "youtube.com" in link or "youtu.be" in link:
-                        st.video(link)
-                    else:
-                        st.write(f"🔗 [Watch Video]({link})")
+            v_cols = st.columns(3)
+            queries = item.get('youtube_queries', [])
+            
+            # Limit to 3 video buttons to keep layout clean
+            for v_idx, query in enumerate(queries[:3]):
+                clean_query = query.replace(" ", "+")
+                search_url = f"https://www.youtube.com/results?search_query={clean_query}"
+                
+                with v_cols[v_idx % 3]:
+                    st.markdown(f"""
+                        <div class="video-card">
+                            <p style="font-weight:bold; font-size:14px;">📺 {query}</p>
+                            <a href="{search_url}" target="_blank" style="text-decoration:none; color:white; background-color:#FF0000; padding:8px 15px; border-radius:5px;">
+                                ▶ Watch on YouTube
+                            </a>
+                        </div>
+                    """, unsafe_allow_html=True)
 
             st.markdown("---")
