@@ -96,7 +96,7 @@ st.markdown("""
     
     .video-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 20px;
         margin: 20px 0;
     }
@@ -117,11 +117,12 @@ st.markdown("""
     
     .video-thumbnail {
         position: relative;
-        background: #000;
-        height: 180px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        height: 160px;
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 48px;
     }
     
     .video-info {
@@ -134,16 +135,21 @@ st.markdown("""
         color: #2d3748;
         margin-bottom: 8px;
         line-height: 1.4;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
+        min-height: 40px;
     }
     
     .video-channel {
         font-size: 12px;
         color: #718096;
+        margin-bottom: 8px;
+    }
+    
+    .video-description {
+        font-size: 12px;
+        color: #4a5568;
         margin-bottom: 12px;
+        line-height: 1.4;
+        min-height: 35px;
     }
     
     .watch-button {
@@ -201,6 +207,7 @@ st.markdown("""
         line-height: 28px;
         margin-right: 10px;
         font-weight: 600;
+        font-size: 14px;
     }
     
     div[data-testid="stToolbar"] {visibility: hidden;}
@@ -218,9 +225,9 @@ if 'toc_text' not in st.session_state:
 
 # --- SIDEBAR ---
 with st.sidebar:
-    st.header("🔐 API Configuration")
+    st.header("🔐 Settings")
     
-    api_key_input = st.text_input("OpenAI API Key", type="password", placeholder="sk-...")
+    api_key_input = st.text_input("Enter OpenAI API Key", type="password", placeholder="sk-...")
     if api_key_input:
         openai_api_key = api_key_input.strip()
     elif "OPENAI_API_KEY" in st.secrets:
@@ -230,12 +237,14 @@ with st.sidebar:
     
     st.divider()
     
-    st.markdown("### 📚 About EduPlan Pro")
-    st.caption("Designed for US school curriculum standards (K-12)")
+    st.markdown("### 📚 About")
+    st.caption("🇺🇸 US School Curriculum Standards")
+    st.caption("📖 K-12 Grade Levels")
+    st.caption("🎬 Curated Educational Videos")
     
     st.divider()
     
-    if st.button("🔄 Start New Curriculum", use_container_width=True):
+    if st.button("🔄 Reset / New Search", use_container_width=True):
         st.session_state.topics = []
         st.session_state.generated_content = []
         st.session_state.toc_text = ""
@@ -345,9 +354,11 @@ Find 4 HIGH-QUALITY videos from these trusted sources ONLY:
 - National Geographic
 - Amoeba Sisters (for Biology)
 - The Organic Chemistry Tutor (for Chemistry/Physics)
+- Bozeman Science
+- MIT OpenCourseWare
 
 For each video, provide:
-- Exact video title (real videos only)
+- Exact video title (must be real videos from these channels)
 - Channel name
 - Brief description of what the video covers (1 sentence)
 - Video type: "Theory" or "Experiment Demo"
@@ -389,29 +400,25 @@ OUTPUT AS VALID JSON:
             "title": "Exact Video Title",
             "channel": "Channel Name",
             "description": "What this video covers",
-            "type": "Theory",
-            "search_query": "channel name + video title keywords"
+            "type": "Theory"
         }},
         {{
             "title": "Exact Video Title",
             "channel": "Channel Name", 
             "description": "What this video covers",
-            "type": "Theory",
-            "search_query": "channel name + video title keywords"
+            "type": "Theory"
         }},
         {{
             "title": "Exact Video Title",
             "channel": "Channel Name",
             "description": "What this video covers", 
-            "type": "Experiment Demo",
-            "search_query": "channel name + video title keywords"
+            "type": "Experiment Demo"
         }},
         {{
             "title": "Exact Video Title",
             "channel": "Channel Name",
             "description": "What this video covers",
-            "type": "Experiment Demo", 
-            "search_query": "channel name + video title keywords"
+            "type": "Experiment Demo"
         }}
     ]
 }}
@@ -438,8 +445,9 @@ CRITICAL: Output ONLY valid JSON. No markdown, no explanation, just the JSON obj
         return None, 0
 
 def render_video_card(video, index):
-    """Render a modern video card with YouTube search link."""
-    search_query = video.get('search_query', f"{video.get('channel', '')} {video.get('title', '')}").replace(' ', '+')
+    """Render a modern video card with YouTube search link - NO API NEEDED."""
+    # Create search query from channel + title
+    search_query = f"{video.get('channel', '')} {video.get('title', '')}".replace(' ', '+')
     youtube_search_url = f"https://www.youtube.com/results?search_query={search_query}"
     
     video_type_emoji = "🧠" if video.get('type') == 'Theory' else "🔬"
@@ -447,12 +455,12 @@ def render_video_card(video, index):
     st.markdown(f"""
         <div class="video-card">
             <div class="video-thumbnail">
-                <div style="font-size: 48px;">{video_type_emoji}</div>
+                <div style="color: white; font-size: 48px;">{video_type_emoji}</div>
             </div>
             <div class="video-info">
                 <div class="video-title">{video.get('title', 'Educational Video')}</div>
                 <div class="video-channel">📺 {video.get('channel', 'YouTube')}</div>
-                <p style="font-size: 12px; color: #4a5568; margin-bottom: 12px;">{video.get('description', '')}</p>
+                <div class="video-description">{video.get('description', 'Educational content')}</div>
                 <a href="{youtube_search_url}" target="_blank" class="watch-button">
                     ▶ Watch on YouTube
                 </a>
@@ -473,13 +481,13 @@ if not st.session_state.topics:
     col1, col2, col3 = st.columns([2, 1, 1])
     
     with col1:
-        subject = st.text_input("📚 Subject", placeholder="Physics, Biology, Chemistry, etc.", key="subject_input")
+        subject = st.text_input("📚 Enter Subject", placeholder="Physics, Biology, Chemistry, etc.")
     
     with col2:
-        grade = st.text_input("🎯 Grade Level", placeholder="e.g., 8", key="grade_input")
+        grade = st.text_input("🎯 Grade Level", placeholder="e.g. 8")
     
     with col3:
-        mode = st.selectbox("🏫 Learning Mode", ["Physical (Classroom)", "Online (Virtual)"])
+        mode = st.radio("🏫 Learning Mode", ["Physical (Classroom)", "Online (Virtual)"])
     
     st.markdown("<br>", unsafe_allow_html=True)
     
@@ -502,7 +510,7 @@ if not st.session_state.topics:
 
 # STEP 2: Topic Selection
 elif not st.session_state.generated_content:
-    st.success(f"✅ Curriculum Generated: **{subject} - Grade {grade}**")
+    st.success(f"✅ Curriculum Generated Successfully for **{subject} - Grade {grade}**")
     
     # Display TOC nicely
     with st.expander("📖 View Complete Table of Contents", expanded=True):
@@ -517,8 +525,7 @@ elif not st.session_state.generated_content:
     with col1:
         selection_type = st.radio(
             "Choose what to generate:",
-            ["All Topics (Recommended)", "Select Specific Topics"],
-            key="selection_type"
+            ["All Topics (Recommended)", "Select Specific Topics"]
         )
     
     selected_topics = []
@@ -527,8 +534,7 @@ elif not st.session_state.generated_content:
         with col2:
             chosen = st.multiselect(
                 "Select topics:", 
-                st.session_state.topics,
-                key="topic_selector"
+                st.session_state.topics
             )
             selected_topics = [(st.session_state.topics.index(t)+1, t) for t in chosen]
     else:
@@ -560,7 +566,7 @@ elif not st.session_state.generated_content:
 
 # STEP 3: Display Generated Content
 else:
-    st.success(f"🎉 Complete Curriculum Ready!")
+    st.success(f"🎉 Complete Curriculum Ready for **{subject} - Grade {grade}**")
     
     # Display each topic as a beautiful card
     for idx, item in enumerate(st.session_state.generated_content):
@@ -609,17 +615,22 @@ else:
             
             if theory_videos:
                 st.markdown("**🧠 Conceptual Learning Videos**")
+                st.markdown('<div class="video-grid">', unsafe_allow_html=True)
                 cols = st.columns(len(theory_videos))
                 for i, video in enumerate(theory_videos):
                     with cols[i]:
                         render_video_card(video, i)
+                st.markdown('</div>', unsafe_allow_html=True)
             
             if experiment_videos:
+                st.markdown("<br>", unsafe_allow_html=True)
                 st.markdown("**🔬 Experiment & Demonstration Videos**")
+                st.markdown('<div class="video-grid">', unsafe_allow_html=True)
                 cols = st.columns(len(experiment_videos))
                 for i, video in enumerate(experiment_videos):
                     with cols[i]:
                         render_video_card(video, i)
+                st.markdown('</div>', unsafe_allow_html=True)
         
         # Experiment Section
         exp = item.get('experiment', {})
@@ -639,5 +650,5 @@ else:
             
             st.markdown('</div>', unsafe_allow_html=True)
         
-        st.markdown('</div>', unsafe_allow_html=True)  # Close topic-card
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("<br><br>", unsafe_allow_html=True)
