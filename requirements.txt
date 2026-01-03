@@ -1,6 +1,4 @@
 streamlit
 openai
 pandas
-gunicorn
-flask (or fastapi)
-python-dotenv
+
